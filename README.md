@@ -1,1 +1,1 @@
-# python-email-client
+# PYTHON EMAIL CLIENT
