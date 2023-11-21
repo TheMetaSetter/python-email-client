@@ -1,27 +1,39 @@
-import socket 
+import socket
+import base64
 
-HEADER = 64
-PORT = 5050
-FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "DISCONNECT"
-SERVER = socket.gethostbyname(socket.gethostname())
-ADDR = (SERVER, PORT)
+# Create a socket object
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
+# Connect to the SMTP server
+s.connect(('127.0.0.1', 2225))
 
-def send(msg):
-    message = msg.encode(FORMAT)
-    msg_length = len(message)
-    send_length = str(msg_length).encode(FORMAT)
-    send_length += b' ' * (HEADER - len(send_length))
-    client.send(send_length)
-    client.send(message)
-    print(client.recv(2048).decode(FORMAT))
+# Receive the server's response
+print(s.recv(1024).decode())
 
-send("Hello World!")
-input()
-send("Hello Long")
-input()
-send("Hi Guy")
-send(DISCONNECT_MESSAGE)
+# Send HELO command to the server
+s.sendall(b'HELO \r\n')
+print(s.recv(1024).decode())
+
+# Send MAIL FROM command
+s.sendall(b'MAIL FROM:<hailong552004@gmail.com>\r\n')
+print(s.recv(1024).decode())
+
+# Send RCPT TO command
+s.sendall(b'RCPT TO:<hailong552004@gmail.com>\r\n')
+print(s.recv(1024).decode())
+
+# Send DATA command
+s.sendall(b'DATA\r\n')
+print(s.recv(1024).decode())
+
+# Send email headers and body
+email_body = 'From: hailong552004@gmail.com\r\nTo: hailong552004@gmail.com\r\nSubject: Test email\r\n\r\nThis is a test email.\r\n.\r\n'
+s.sendall(email_body.encode())
+print(s.recv(1024).decode())
+
+# Send QUIT command
+s.sendall(b'QUIT\r\n')
+print(s.recv(1024).decode())
+
+# Close the socket
+s.close()
