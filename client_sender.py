@@ -82,28 +82,26 @@ def email_list(str_info):
 
 def send_file(client,path):
     attachment_filename = os.path.basename(path)
-    boundary = 'boundary1'
-
-    # Send MIME headers for the attachment
-    mime_headers = f'MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary={boundary}\r\n\r\n'
-    client.sendall(mime_headers.encode())
 
     # Send email body
-    email_body = f'\r\n--{boundary}\r\nContent-Type: text/plain\r\n\r\n \r\n\r\n--{boundary}\r\n'
+    email_body = f'\r\n--boundary1\r\nContent-Type: text/plain\r\n\r\n \r\n\r\n--boundary1\r\n'
     
     with open(path, 'rb') as file:
         attachment_data = base64.b64encode(file.read()).decode()
         attachment_headers = f'Content-Disposition: attachment; filename={attachment_filename}\r\nContent-Transfer-Encoding: base64\r\n\r\n'
-        client.sendall((email_body + attachment_headers + attachment_data + f'\r\n--{boundary}--\r\n.\r\n').encode())
-        # data = file.read(4096)
-        # while data:
-        #     client.send(data)
-        #     data = file.read(4096)
-        # client.send(data)
-        # data = file.read(4096)
+        client.sendall((email_body + attachment_headers + attachment_data + f'\r\n--boundary1--\r\n.\r\n').encode())
    
-def send_email(to_email,cc_email, bcc_email, subject, content, file_choice ):
-    mail_server = "127.0.0.1"  
+def send_file(client, path, boundary):
+    attachment_filename = os.path.basename(path)
+
+    # Attach the file
+    with open(path, 'rb') as file:
+        attachment_data = base64.b64encode(file.read()).decode()
+        attachment_headers = f'Content-Disposition: attachment; filename={attachment_filename}\r\nContent-Transfer-Encoding: base64\r\n\r\n'
+        client.sendall(f'--{boundary}\r\n{attachment_headers}{attachment_data}\r\n'.encode())
+
+def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
+    mail_server = "127.0.0.1"
     mail_port = 2225
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as c:
@@ -111,26 +109,27 @@ def send_email(to_email,cc_email, bcc_email, subject, content, file_choice ):
         c.sendall(b'HELO \r\n')
         c.recv(1024)
 
-        mail_from = "MAIL FROM: <tin75vn@gmail.com>\r\n"
+        mail_from = "MAIL FROM: <hailong552004@gmail.com>\r\n"
         c.send(mail_from.encode("utf8"))
         c.recv(1024)
-        
+
         if to_email:
-            sendList_emails(c,to_email)
+            sendList_emails(c, to_email)
             if cc_email:
-                sendList_emails(c,cc_email)
+                sendList_emails(c, cc_email)
                 if bcc_email:
-                    sendList_emails(c,bcc_email)
-            
-        
-        #Begin sending data
+                    sendList_emails(c, bcc_email)
+
+        # Begin sending data
         data_command = "DATA\r\n"
         c.send(data_command.encode("utf8"))
         c.recv(1024)
 
+        # Generate a random boundary
+        boundary = "boundary1"
+
         # Send email structure
         email_content = f"Subject: {subject}\r\n"
-        
         email_content += f"To: {to_email}\r\n"
 
         if cc_email:
@@ -139,36 +138,28 @@ def send_email(to_email,cc_email, bcc_email, subject, content, file_choice ):
         if bcc_email:
             email_content += f"BCC: {bcc_email}\r\n"
 
-        email_content += "\r\n"  
-        email_content += content
-        email_content += "\r\n" 
-        c.send(email_content.encode("utf8"))
-        
-        #Send file
+        mime_headers = f'MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary={boundary}\r\n\r\n'
+        c.sendall((email_content + mime_headers).encode())
+
+        # Send file attachments
         if file_choice == 1:
             file_amount = int(input("Số lượng file muốn gửi: "))
-            for i in range(1,file_amount+1):
+            for i in range(1, file_amount + 1):
                 path = input(f"Cho biết đường dẫn file thứ {i}: ")
-                if check_file_size(path,3):
-                    # filename = path.split("/")[-1]+ "\r\n"
-                    # c.send(filename.encode("utf8"))
-                    # c.recv(1924)
-                    send_file(c, path)
-
+                if check_file_size(path, 3):
+                    send_file(c, path, boundary)
 
         # End mail
-        end = "\r\n.\r\n"
+        end = f'\r\n--{boundary}--\r\n.\r\n'
         c.send(end.encode())
         c.recv(1024)
-        
 
         # Close connect
-        quit = "QUIT\r\n"
-        c.send(quit.encode())
+        quit_command = "QUIT\r\n"
+        c.send(quit_command.encode())
         c.recv(1024)
-        c.close()
-        
-        print("\nĐã gửi email thành công\n\n")
+
+    print("\nĐã gửi email thành công\n\n")
         
         
         
