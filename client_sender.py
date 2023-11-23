@@ -40,8 +40,9 @@
 
 
 import socket
-import base64   
+import base64
 import os
+
 
 def check_file_size(file_path, size):
     max_size_in_bytes = size * 1024 * 1024
@@ -50,7 +51,8 @@ def check_file_size(file_path, size):
         return False
     return True
 
-def sendList_emails(client,list):
+
+def sendList_emails(client, list):
     if list:
         for item in list:
             client.sendall(f'RCPT TO:<{item}>\r\n'.encode("utf8"))
@@ -78,7 +80,9 @@ def email_list(str_info):
         for email in invalid:
             print(email)
 
-    return valid   
+    return valid
+
+
 def send_file(client, path, boundary):
     attachment_filename = os.path.basename(path)
 
@@ -86,7 +90,9 @@ def send_file(client, path, boundary):
     with open(path, 'rb') as file:
         attachment_data = base64.b64encode(file.read()).decode()
         attachment_headers = f'Content-Disposition: attachment; filename={attachment_filename}\r\nContent-Transfer-Encoding: base64\r\n\r\n'
-        client.sendall(f'--{boundary}\r\n{attachment_headers}{attachment_data}\r\n'.encode())
+        client.sendall(
+            f'--{boundary}\r\n{attachment_headers}{attachment_data}\r\n'.encode())
+
 
 def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
     mail_server = "127.0.0.1"
@@ -124,8 +130,7 @@ def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
             email_content += f"CC: {cc_email}\r\n"
 
         if bcc_email:
-            email_content += f"BCC: {bcc_email}\r\n"        
-
+            email_content += f"BCC: {bcc_email}\r\n"
 
         # Send file attachments
         if file_choice == 1:
@@ -133,16 +138,16 @@ def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
             c.sendall((email_content + mime_headers).encode())
             email_body = f'\r\n--{boundary}\r\nContent-Type: text/plain\r\n\r\n{content}\r\n\r\n'
             c.sendall(email_body.encode())
-            
+
             file_amount = int(input("Số lượng file muốn gửi: "))
             for i in range(1, file_amount + 1):
                 path = input(f"Cho biết đường dẫn file thứ {i}: ")
                 if check_file_size(path, 3):
                     send_file(c, path, boundary)
         else:
-            email_content += "\r\n"  
+            email_content += "\r\n"
             email_content += content
-            email_content += "\r\n" 
+            email_content += "\r\n"
             c.send(email_content.encode("utf8"))
 
         # End mail
@@ -156,11 +161,9 @@ def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
         c.recv(1024)
 
     print("\nĐã gửi email thành công\n\n")
-        
-        
-        
-#------------------------------------------------main-------------------------------------------------
 
+
+# ------------------------------------------------main-------------------------------------------------
 
 print("Đây là thông tin soạn email: (nếu không điền vui lòng nhấn enter để bỏ qua)")
 temp_to = input("To: ")
@@ -179,6 +182,5 @@ content = input("Content: ")
 have_file = int(input("Có gửi kèm file (1. có, 2. không): "))
 
 
-send_email(to_receivers,cc_receivers, bcc_receivers, subject, content, have_file )
-
-
+send_email(to_receivers, cc_receivers, bcc_receivers,
+           subject, content, have_file)
