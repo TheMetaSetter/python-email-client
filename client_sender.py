@@ -124,21 +124,29 @@ def send_email(to_email, cc_email, bcc_email, subject, content, file_choice):
             email_content += f"CC: {cc_email}\r\n"
 
         if bcc_email:
-            email_content += f"BCC: {bcc_email}\r\n"
+            email_content += f"BCC: {bcc_email}\r\n"        
 
-        mime_headers = f'MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary={boundary}\r\n\r\n'
-        c.sendall((email_content + mime_headers).encode())
 
         # Send file attachments
         if file_choice == 1:
+            mime_headers = f'MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary={boundary}\r\n\r\n'
+            c.sendall((email_content + mime_headers).encode())
+            email_body = f'\r\n--{boundary}\r\nContent-Type: text/plain\r\n\r\n{content}\r\n\r\n'
+            c.sendall(email_body.encode())
+            
             file_amount = int(input("Số lượng file muốn gửi: "))
             for i in range(1, file_amount + 1):
                 path = input(f"Cho biết đường dẫn file thứ {i}: ")
                 if check_file_size(path, 3):
                     send_file(c, path, boundary)
+        else:
+            email_content += "\r\n"  
+            email_content += content
+            email_content += "\r\n" 
+            c.send(email_content.encode("utf8"))
 
         # End mail
-        end = f'\r\n--{boundary}--\r\n.\r\n'
+        end = f'\r\n.\r\n.\r\n'
         c.send(end.encode())
         c.recv(1024)
 
