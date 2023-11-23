@@ -78,19 +78,7 @@ def email_list(str_info):
         for email in invalid:
             print(email)
 
-    return valid
-
-def send_file(client,path):
-    attachment_filename = os.path.basename(path)
-
-    # Send email body
-    email_body = f'\r\n--boundary1\r\nContent-Type: text/plain\r\n\r\n \r\n\r\n--boundary1\r\n'
-    
-    with open(path, 'rb') as file:
-        attachment_data = base64.b64encode(file.read()).decode()
-        attachment_headers = f'Content-Disposition: attachment; filename={attachment_filename}\r\nContent-Transfer-Encoding: base64\r\n\r\n'
-        client.sendall((email_body + attachment_headers + attachment_data + f'\r\n--boundary1--\r\n.\r\n').encode())
-   
+    return valid   
 def send_file(client, path, boundary):
     attachment_filename = os.path.basename(path)
 
