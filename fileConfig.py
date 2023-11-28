@@ -1,23 +1,36 @@
-import configparser
+import json
 
-def read_config():
-    config = configparser.ConfigParser()
-    config.read("file_config.ini")
+config_data = {
+    "General": {
+        "Username": "Quan Nguyen <ntquan@testing.com>",
+        "Password": "ahihi",
+        "MailServer": "192.168.1.10",
+        "SMTP": 3333,
+        "POP3": 4444,
+        "Autoload": 10
+    },
+    "Filter": [
+        {
+            "From": ["ahihi@testing.com", "ahuu@testing.com"],
+            "ToFolder": "Project"
+        },
+        {
+            "Subject": ["urgent", "ASAP"],
+            "ToFolder": "Important"
+        },
+        {
+            "Content": ["report", "meeting"],
+            "ToFolder": "Work"
+        },
+        {
+            "Spam": ["virus", "hack", "crack"],
+            "ToFolder": "Spam"
+        }
+    ]
+}
 
-    username = config.get('General', 'Username')
-    password = config.get('General', 'Password')
-    mail_server = config.get('General', 'MailServer')
-    smtp_port = config.get('General', 'SMTP')
-    pop3_port = config.get('General', 'POP3')
-    autoload_interval = config.get('General', 'Autoload')
+# Lưu vào file JSON
+with open('config.json', 'w') as config_file:
+    json.dump(config_data, config_file, indent=2)
 
-    return {
-        'Username': username,
-        'Password': password,
-        'MailServer': mail_server,
-        'SMTP': smtp_port,
-        'POP3': pop3_port,
-        'Autoload': autoload_interval
-    }
-
-config_info = read_config()
+print("Đã lưu cấu hình vào config.json")
