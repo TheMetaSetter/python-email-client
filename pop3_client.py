@@ -344,11 +344,11 @@ class pop3_client:
 
     def __dipslay_message_summary(self, message: mailbox.mboxMessage):
         # Components of an message summary
-        read_status_str: str() = None
-        subject_str = None
-        sender_str = None
-        recipient_str = None
-        have_attachment_str = None
+        read_status_str: str() = ""
+        subject_str: str() = ""
+        sender_str: str() = ""
+        recipient_str: str() = ""
+        have_attachment_str: str() = ""
 
         # Get the read status string
         flags = message.get_flags()
