@@ -1,0 +1,7 @@
+cd "/Users/conquerormikrokosmos/Downloads/LAPTOP MAC/IT/PYTHON PROJECT/python-email-client/test_server"
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+export PATH_TO_FX='/usr/local/lib/javafx/javafx-sdk-21.0.1/lib'
+java --module-path $PATH_TO_FX --add-modules javafx.controls,javafx.fxml -jar test-mail-server-1.0.jar -s 2225 -p 3335 -m ./
+
+/Users/conquerormikrokosmos/Downloads/LAPTOP MAC/IT/Python for data science Cheat Sheet.pdf
+/Users/conquerormikrokosmos/Downloads/LAPTOP MAC/IT/stdc++.h
