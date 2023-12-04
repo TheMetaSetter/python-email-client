@@ -56,3 +56,4 @@ email_processor = email_filter("config.json")
 email_info = email_processor.extract_email_info_from_msg_file("my_mailbox.mbox")
 folder = email_processor.classify_email(email_info)
 print(folder)
+ 
