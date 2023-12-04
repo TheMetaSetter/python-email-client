@@ -1,54 +1,58 @@
 import json
 
-def load_config(config_file_path):
-    with open(config_file_path, 'r') as config_file:
-        config = json.load(config_file)
-    return config
+class email_filter:
+    def __init__(self, config_file_path):
+        self.config = self.load_config(config_file_path)
 
-def classify_email(email, config):
-    sender = email['sender']
-    subject = email['subject']
-    content = email['content']
+    def load_config(self, config_file_path):
+        with open(config_file_path, 'r') as config_file:
+            config = json.load(config_file)
+        return config
 
-    for filter_rule in config['Filter']:
-        if 'From' in filter_rule and any(addr in sender for addr in filter_rule['From']):
-            return filter_rule['ToFolder']
-        if 'Subject' in filter_rule and any(keyword in subject for keyword in filter_rule['Subject']):
-            return filter_rule['ToFolder']
-        if 'Content' in filter_rule and any(keyword in content for keyword in filter_rule['Content']):
-            return filter_rule['ToFolder']
-        if 'Spam' in filter_rule and any(keyword in subject or keyword in content for keyword in filter_rule['Spam']):
-            return filter_rule['ToFolder']
+    def extract_email_info_from_msg_file(self, msg_file_path):
+        email_info = {'From': '', 'To': '', 'Subject': '', 'Content': ''}
 
-    # Default folder: Inbox
-    return 'Inbox'
+        with open(msg_file_path, 'r', encoding='utf-8', errors='ignore') as msg_file:
+            lines = msg_file.readlines()
 
+            in_plain_text_content = False
 
-def save_to_folder(email, folder):
-    print(f"Saving email to folder: {folder}")
+            for line in lines:
+                if line.startswith("From:"):
+                    email_info['From'] = line[len("From:"):].strip()
+                elif line.startswith("To:"):
+                    email_info['To'] = line[len("To:"):].strip()
+                elif line.startswith("Subject:"):
+                    email_info['Subject'] = line[len("Subject:"):].strip()
+                elif line.startswith("Content-Type: text/plain"):
+                    in_plain_text_content = True
+                    continue
+                elif line.startswith("--") and in_plain_text_content:
+                    break
+                elif in_plain_text_content:
+                    email_info['Content'] += line.strip() + ' '
 
-config_file_path = 'config.json'
+        return email_info
 
-# Have to make a layer comparision i guess
-email_info = {
-    'sender' : 'example@testing.com',
-    'subject' : 'nah',
-    'content' : 'This is an virus news'
-}
+    def classify_email(self, email):
+        sender = email['From']
+        subject = email['Subject']
+        content = email['Content']
 
-config = load_config(config_file_path)
-category = classify_email(email_info, config)
-save_to_folder(email_info, category)
+        for filter_rule in self.config['Filter']:
+            if 'From' in filter_rule and any(addr in sender for addr in filter_rule['From']):
+                return filter_rule['ToFolder']
+            if 'Subject' in filter_rule and any(keyword in subject for keyword in filter_rule['Subject']):
+                return filter_rule['ToFolder']
+            if 'Content' in filter_rule and any(keyword in content for keyword in filter_rule['Content']):
+                return filter_rule['ToFolder']
+            if 'Spam' in filter_rule and any(keyword in subject or keyword in content for keyword in filter_rule['Spam']):
+                return filter_rule['ToFolder']
 
-
-
-
-
-# configResult = load_config("config.json")
-
-# name = configResult["General"]["Username"]
-# passWord = configResult["General"]["Password"]
-
-# print(f"User name: {name}")
-# print(f"Password: {passWord}")
-
+        return "Inbox"
+    
+# Example usage:
+email_processor = email_filter("config.json")
+email_info = email_processor.extract_email_info_from_msg_file("my_mailbox.mbox")
+folder = email_processor.classify_email(email_info)
+print(folder)
