@@ -1,4 +1,5 @@
 import pop3_client
+from smtp_client import *
 from utilities import *
 
 class console_email_client:
@@ -54,7 +55,30 @@ class console_email_client:
         exit(0)
 
     def __send_email(self):
-        pass
+        print("This is the information to compose an email: (If not filled in, please press enter to skip)")
+        temp_to = input("To: ")
+        to_receivers = SMTPClient.email_list(temp_to)
+
+        temp_cc = input("Cc: ")
+        cc_receivers = SMTPClient.email_list(temp_cc)
+
+        temp_bcc = input("BCC: ")
+        bcc_receivers = SMTPClient.email_list(temp_bcc)
+
+        subject = input("Subject: ")
+
+        content = input("Content: ")
+
+        have_file = int(input("Are files attached? (1. yes, 2. no): "))
+        path_list = []
+        if have_file == 1:
+            file_amount = int(input("Number of files you want to send: "))
+            for i in range(1, file_amount + 1):
+                path = input(f"Indicates the file path {i}: ")
+                path_list.append(path)
+
+        with SMTPClient(self.__current_user, to_receivers, cc_receivers, bcc_receivers, subject, content, path_list) as client:
+                client.send_email()
 
     def __display_retrieved_email(self):
         print("List of your mailboxes:")
