@@ -1,4 +1,5 @@
 import json
+import mailbox
 
 class email_filter:
     def __init__(self, config_file_path):
@@ -9,28 +10,30 @@ class email_filter:
             config = json.load(config_file)
         return config
 
-    def extract_email_info_from_msg_file(self, msg_file_path):
+    def extract_email_info_from_mbox_file(self, mbox_file_path):
         email_info = {'From': '', 'To': '', 'Subject': '', 'Content': ''}
 
-        with open(msg_file_path, 'r', encoding='utf-8', errors='ignore') as msg_file:
-            lines = msg_file.readlines()
+        mbox = mailbox.mbox(mbox_file_path)
 
-            in_plain_text_content = False
+        for message in mbox:
+            # Extract 'From' address
+            if 'From' in message:
+                email_info['From'] = message['From']
 
-            for line in lines:
-                if line.startswith("From:"):
-                    email_info['From'] = line[len("From:"):].strip()
-                elif line.startswith("To:"):
-                    email_info['To'] = line[len("To:"):].strip()
-                elif line.startswith("Subject:"):
-                    email_info['Subject'] = line[len("Subject:"):].strip()
-                elif line.startswith("Content-Type: text/plain"):
-                    in_plain_text_content = True
-                    continue
-                elif line.startswith("--") and in_plain_text_content:
-                    break
-                elif in_plain_text_content:
-                    email_info['Content'] += line.strip() + ' '
+            # Extract 'To' addresses
+            if 'To' in message:
+                email_info['To'] = message['To']
+
+            # Extract 'Subject'
+            if 'Subject' in message:
+                email_info['Subject'] = message['Subject']
+
+            # Extract 'Content'
+            if message.is_multipart():
+                for part in message.walk():
+                    content_type = part.get_content_type()
+                    if content_type == 'text/plain':
+                        email_info['Content'] += part.get_payload(decode=True).decode('utf-8', errors='ignore') + ' '
 
         return email_info
 
@@ -50,10 +53,4 @@ class email_filter:
                 return filter_rule['ToFolder']
 
         return "Inbox"
-    
-# Example usage:
-email_processor = email_filter("config.json")
-email_info = email_processor.extract_email_info_from_msg_file("my_mailbox.mbox")
-folder = email_processor.classify_email(email_info)
-print(folder)
- 
+
