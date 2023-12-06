@@ -1,5 +1,5 @@
 import pop3_client
-from smtp_client import *
+import smtp_client
 from utilities import *
 
 class console_email_client:
@@ -11,7 +11,7 @@ class console_email_client:
         self.__pop3_port = pop3_port
 
         self.__pop3_client: pop3_client.pop3_client = None
-        # self.__smtp_client: smtp_client.smtp_client = None
+        self.__smtp_client: smtp_client.smtp_client = None
 
         self.__current_user: str = None
 
@@ -29,8 +29,8 @@ class console_email_client:
             
             password = input("Password: ")
 
-            # self.__smtp_client = smtp_client.smtp_client(
-            #     self.__smtp_server_address, self.smtp_port, username, password)
+            self.__smtp_client = smtp_client.smtp_client(
+                self.__smtp_server_address, self.__smtp_port, username, password)
             self.__pop3_client = pop3_client.pop3_client(
                 self.__pop3_server_address, self.__pop3_port, username, password)
             self.__pop3_client.quit()
@@ -47,8 +47,8 @@ class console_email_client:
         if self.__pop3_client is not None:
             self.__pop3_client.close()
 
-        # if self.__smtp_client is not None:
-        #     self.__smtp_client.close()
+        if self.__smtp_client is not None:
+            self.__smtp_client.__exit__
 
         print("Logout completed.")
 
@@ -57,13 +57,13 @@ class console_email_client:
     def __send_email(self):
         print("This is the information to compose an email: (If not filled in, please press enter to skip)")
         temp_to = input("To: ")
-        to_receivers = SMTPClient.email_list(temp_to)
+        to_receivers = self.__smtp_client.email_list(temp_to)
 
         temp_cc = input("Cc: ")
-        cc_receivers = SMTPClient.email_list(temp_cc)
+        cc_receivers = self.__smtp_client.email_list(temp_cc)
 
         temp_bcc = input("BCC: ")
-        bcc_receivers = SMTPClient.email_list(temp_bcc)
+        bcc_receivers = self.__smtp_client.email_list(temp_bcc)
 
         subject = input("Subject: ")
 
@@ -77,8 +77,7 @@ class console_email_client:
                 path = input(f"Indicates the file path {i}: ")
                 path_list.append(path)
 
-        with SMTPClient(self.__current_user, to_receivers, cc_receivers, bcc_receivers, subject, content, path_list) as client:
-                client.send_email()
+        self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
 
     def __display_retrieved_email(self):
         print("List of your mailboxes:")

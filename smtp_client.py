@@ -7,27 +7,17 @@ import string
 # Third party imports
 import socket
 
+from utilities import *
 
-class SMTPClient:
-    def __init__(self, mail_from, to, cc, bcc, subject, content, path_list):
+
+class smtp_client:
+    def __init__(self, smtp_server: str, port: int, username: str, password: str = "12345678"):
         self.__socket = None
-        self.__smtp_server = "127.0.0.1"
-        self.__port = 2225
+        self.__smtp_server = smtp_server
+        self.__port = port
 
-        self._username = mail_from
-        self._to = to
-        self._cc = cc
-        self._bcc = bcc
-        self._subject = subject
-        self._content = content
-        self._path = path_list
-        
-    def __enter__(self):
-        self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__socket.connect((self.__smtp_server, self.__port))
-        self.__socket.sendall(b'EHLO \r\n')
-        self.__socket.recv(1024)
-        return self
+        self.__username = username
+        self.__password = password
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.__socket.close()
@@ -56,7 +46,7 @@ class SMTPClient:
         valid = []
         invalid = []
         for email in mails:
-            if "@" in email and "." in email:
+            if is_valid_email(email):
                 valid.append(email)
             else:
                 invalid.append(email)
@@ -64,6 +54,7 @@ class SMTPClient:
             print("Invalid email address: ")
             for email in invalid:
                 print(email)
+            print("\n")
         return valid
     
     @staticmethod
@@ -103,29 +94,26 @@ class SMTPClient:
     def generate_boundary():
         return ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
-    def send_email(self):
-        mail_server = "127.0.0.1"
-        mail_port = 2225
-
+    def send_email(self, to, cc, bcc, subject, content, path_list):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.__socket:
             try:
-                self.__socket.connect((mail_server, mail_port))
+                self.__socket.connect((self.__smtp_server, self.__port))
                 self.__socket.sendall(b'EHLO \r\n')
                 self.__socket.recv(1024)
 
                 # Send MAIL FROM
-                mail_from = "MAIL FROM: <{}>\r\n".format(self._username)
+                mail_from = "MAIL FROM: <{}>\r\n".format(self.__username)
 
                 self.__socket.send(mail_from.encode())
                 self.__socket.recv(1024)
 
                 # Send MAIL TO
-                if self._to:
-                    self.send_list_emails(self._to)
-                if self._cc:
-                    self.send_list_emails(self._cc)
-                if self._bcc:
-                    self.send_list_emails(self._bcc)
+                if to:
+                    self.send_list_emails(to)
+                if cc:
+                    self.send_list_emails(cc)
+                if bcc:
+                    self.send_list_emails(bcc)
 
                 # Begin sending data
                 self.__socket.send(b'DATA\r\n')
@@ -135,24 +123,24 @@ class SMTPClient:
                 boundary = self.generate_boundary()
 
                 # Send email structure
-                self.__socket.send(f'Subject: {self._subject}\r\n'.encode())
-                self.__socket.send(f'From: {self._username}\r\n'.encode())
-                self.__socket.send(f'To: {", ".join(self._to)}\r\n'.encode())
-                if self._cc:
-                    self.__socket.send(f'Cc: {", ".join(self._cc)}\r\n'.encode())
+                self.__socket.send(f'Subject: {subject}\r\n'.encode())
+                self.__socket.send(f'From: {self.__username}\r\n'.encode())
+                self.__socket.send(f'To: {", ".join(to)}\r\n'.encode())
+                if cc:
+                    self.__socket.send(f'Cc: {", ".join(cc)}\r\n'.encode())
                 self.__socket.send(
                     f'Content-Type: multipart/mixed; boundary={boundary}\r\n'.encode())
                 self.__socket.send('\r\n'.encode())  # End header
 
                 # Send body email
                 self.__socket.send(f'--{boundary}\r\n'.encode())
-                self.__socket.send(f'Content-Type: text/plain\r\n\r\n{self._content}\r\n'.encode())
+                self.__socket.send(f'Content-Type: text/plain\r\n\r\n{content}\r\n'.encode())
 
                 # Send file attachments
                 
-                if self._path:
-                    if self.check_list_file_size(self._path, 3):
-                            for items_file in self._path:
+                if path_list:
+                    if self.check_list_file_size(path_list, 3):
+                            for items_file in path_list:
                                 self.send_file(items_file, boundary)
 
                 # End mail
@@ -166,7 +154,7 @@ class SMTPClient:
                 self.__socket.send(quit_cmd.encode())
                 self.__socket.recv(1024)
 
-                print("\nĐã gửi email thành công\n\n")
+                print("\nEmail sent successfully\n\n")
             except Exception as error:
                 print("Error: ", error)
                 
