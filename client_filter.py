@@ -5,6 +5,9 @@ import mailbox
 # Local application imports
 from utilities import load_config
 
+import json
+import mailbox
+
 class filter_rule:
     def __init__(self, rule):
         self.from_addresses = rule.get('From', [])
@@ -21,36 +24,15 @@ class email_filter:
         with open(config_file_path, 'r') as config_file:
             config = json.load(config_file)
         return [filter_rule(rule) for rule in config.get('Filter', [])]
-        self.config = load_config(config_file_path)
 
-    def extract_email_info_from_mbox_file(self, mbox_file_path):
-        email_info = {'From': '', 'To': '', 'Subject': '', 'Content': ''}
-
-        mbox = mailbox.mbox(mbox_file_path)
-
-        for message in mbox:
-            try:
-                email_info['From'] = message.get('From', '')
-                email_info['To'] = message.get('To', '')
-                email_info['Subject'] = message.get('Subject', '')
-
-                if message.is_multipart():
-                    for part in message.walk():
-                        content_type = part.get_content_type()
-                        if content_type == 'text/plain':
-                            email_info['Content'] += part.get_payload(decode=True).decode('utf-8', errors='ignore') + ' '
-            except Exception as e:
-                print(f"Error extracting email info: {e}")
-
-        return email_info
-
-    def classify_email(self, mbox_file_path):
-        # Gọi hàm extract_email_info_from_mbox_file để lấy thông tin email
-        email = self.extract_email_info_from_mbox_file(mbox_file_path)
-
+    def classify_email(self, email: mailbox.mboxMessage):
         sender = email['From']
         subject = email['Subject']
-        content = email['Content']
+        payload = email.get_payload()
+
+        text_part = payload[0]
+
+        content = text_part.get_payload()
 
         for filter_rule in self.config:
             if filter_rule.from_addresses and any(addr in sender for addr in filter_rule.from_addresses):
@@ -61,5 +43,5 @@ class email_filter:
                 return filter_rule.to_folder
             if filter_rule.spam_keywords and any(keyword in subject or keyword in content for keyword in filter_rule.spam_keywords):
                 return filter_rule.to_folder
-
-        return "Inbox"
+            
+        return 'Inbox'
