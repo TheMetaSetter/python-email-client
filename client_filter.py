@@ -44,7 +44,10 @@ class email_filter:
 
         return email_info
 
-    def classify_email(self, email):
+    def classify_email(self, mbox_file_path):
+        # Gọi hàm extract_email_info_from_mbox_file để lấy thông tin email
+        email = self.extract_email_info_from_mbox_file(mbox_file_path)
+
         sender = email['From']
         subject = email['Subject']
         content = email['Content']
