@@ -1,5 +1,12 @@
+# Standard library imports
 import json
 import mailbox
+
+# Local application imports
+from utilities import load_config
+
+# Local application imports
+from utilities import load_config
 
 class filter_rule:
     def __init__(self, rule):
@@ -17,6 +24,7 @@ class email_filter:
         with open(config_file_path, 'r') as config_file:
             config = json.load(config_file)
         return [filter_rule(rule) for rule in config.get('Filter', [])]
+        self.config = load_config(config_file_path)
 
     def extract_email_info_from_mbox_file(self, mbox_file_path):
         email_info = {'From': '', 'To': '', 'Subject': '', 'Content': ''}
