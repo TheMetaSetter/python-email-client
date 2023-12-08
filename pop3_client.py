@@ -334,6 +334,7 @@ class pop3_client:
     def __ask_to_save_attachments(self, message: mailbox.mboxMessage):
         attachments_count = self.__count_attachments(message)
 
+        choice = 0
         if attachments_count > 0:
             print(
                 "This message have attached file. Do you want to save? Type 1 for Yes, 0 for No.")
@@ -425,14 +426,16 @@ class pop3_client:
 
             # If user choose to display message number count
             if choice != 0:
+                id = choice - 1
+                
                 # Get the message
-                message = mbox[choice]
+                message = mbox[id]
 
                 # Diplay the message
                 self.__display_message(message)
 
                 # Mark the message as read
-                self.__mark_message_as_read(mbox, choice - 1)
+                self.__mark_message_as_read(mbox, id)
             elif choice == 0:
                 # Display all the messages in the mailbox
                 for id, message in enumerate(mbox):
