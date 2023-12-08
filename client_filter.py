@@ -1,6 +1,14 @@
 import json
 import mailbox
 
+class filter_rule:
+    def __init__(self, rule):
+        self.from_addresses = rule.get('From', [])
+        self.subject_keywords = rule.get('Subject', [])
+        self.content_keywords = rule.get('Content', [])
+        self.spam_keywords = rule.get('Spam', [])
+        self.to_folder = rule.get('ToFolder', 'Inbox')
+
 class email_filter:
     def __init__(self, config_file_path):
         self.config = self.load_config(config_file_path)
@@ -8,7 +16,7 @@ class email_filter:
     def load_config(self, config_file_path):
         with open(config_file_path, 'r') as config_file:
             config = json.load(config_file)
-        return config
+        return [filter_rule(rule) for rule in config.get('Filter', [])]
 
     def extract_email_info_from_mbox_file(self, mbox_file_path):
         email_info = {'From': '', 'To': '', 'Subject': '', 'Content': ''}
@@ -16,24 +24,18 @@ class email_filter:
         mbox = mailbox.mbox(mbox_file_path)
 
         for message in mbox:
-            # Extract 'From' address
-            if 'From' in message:
-                email_info['From'] = message['From']
+            try:
+                email_info['From'] = message.get('From', '')
+                email_info['To'] = message.get('To', '')
+                email_info['Subject'] = message.get('Subject', '')
 
-            # Extract 'To' addresses
-            if 'To' in message:
-                email_info['To'] = message['To']
-
-            # Extract 'Subject'
-            if 'Subject' in message:
-                email_info['Subject'] = message['Subject']
-
-            # Extract 'Content'
-            if message.is_multipart():
-                for part in message.walk():
-                    content_type = part.get_content_type()
-                    if content_type == 'text/plain':
-                        email_info['Content'] += part.get_payload(decode=True).decode('utf-8', errors='ignore') + ' '
+                if message.is_multipart():
+                    for part in message.walk():
+                        content_type = part.get_content_type()
+                        if content_type == 'text/plain':
+                            email_info['Content'] += part.get_payload(decode=True).decode('utf-8', errors='ignore') + ' '
+            except Exception as e:
+                print(f"Error extracting email info: {e}")
 
         return email_info
 
@@ -42,15 +44,14 @@ class email_filter:
         subject = email['Subject']
         content = email['Content']
 
-        for filter_rule in self.config['Filter']:
-            if 'From' in filter_rule and any(addr in sender for addr in filter_rule['From']):
-                return filter_rule['ToFolder']
-            if 'Subject' in filter_rule and any(keyword in subject for keyword in filter_rule['Subject']):
-                return filter_rule['ToFolder']
-            if 'Content' in filter_rule and any(keyword in content for keyword in filter_rule['Content']):
-                return filter_rule['ToFolder']
-            if 'Spam' in filter_rule and any(keyword in subject or keyword in content for keyword in filter_rule['Spam']):
-                return filter_rule['ToFolder']
+        for filter_rule in self.config:
+            if filter_rule.from_addresses and any(addr in sender for addr in filter_rule.from_addresses):
+                return filter_rule.to_folder
+            if filter_rule.subject_keywords and any(keyword in subject for keyword in filter_rule.subject_keywords):
+                return filter_rule.to_folder
+            if filter_rule.content_keywords and any(keyword in content for keyword in filter_rule.content_keywords):
+                return filter_rule.to_folder
+            if filter_rule.spam_keywords and any(keyword in subject or keyword in content for keyword in filter_rule.spam_keywords):
+                return filter_rule.to_folder
 
         return "Inbox"
-
