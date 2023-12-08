@@ -5,9 +5,6 @@ import mailbox
 # Local application imports
 from utilities import load_config
 
-# Local application imports
-from utilities import load_config
-
 class filter_rule:
     def __init__(self, rule):
         self.from_addresses = rule.get('From', [])
