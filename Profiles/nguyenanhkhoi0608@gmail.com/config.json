@@ -1,17 +1,16 @@
 {
   "General": {
-    "Username": "Quan Nguyen <ntquan@testing.com>",
-    "Password": "ahihi",
+    "Username": "nguyenanhkhoi0608@gmail.com",
+    "Password": "123456789",
     "MailServer": "192.168.1.10",
-    "SMTP": 3333,
-    "POP3": 4444,
+    "SMTP": 2225,
+    "POP3": 3335,
     "Autoload": 10
   },
   "Filter": [
     {
       "From": [
-        "ahihi@testing.com",
-        "ahuu@testing.com"
+        "tin75vn@gmail.com"
       ],
       "ToFolder": "Project"
     },

@@ -1,3 +1,7 @@
+import json
+import threading
+import time
+
 import pop3_client
 import smtp_client
 from utilities import *
@@ -18,6 +22,8 @@ class console_email_client:
         self.__current_mode: int = None
 
         self.__mailboxes_dict: dict = dict()
+        
+        self.__user_config_file_path: str = None
 
     def __console_login(self):
         try:
@@ -31,15 +37,25 @@ class console_email_client:
 
             self.__smtp_client = smtp_client.smtp_client(
                 self.__smtp_server_address, self.__smtp_port, username, password)
+            
             self.__pop3_client = pop3_client.pop3_client(
                 self.__pop3_server_address, self.__pop3_port, username, password)
-            self.__pop3_client.quit()
+            
         except Exception as e:
             print(e)
             exit(1)
         else:
+            # After login successfully, set current user
             self.__current_user = username
-            return True
+            
+            # Initialize path to config file
+            self.__user_config_file_path = f"Profiles/{self.__current_user}/config.json"
+            
+            # Set config file path for pop3 client
+            self.__pop3_client.set_path_to_config_file(self.__user_config_file_path)
+            
+            # Move all messages to local mailboxes
+            self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
 
     def __console_logout(self):
         self.__current_user = str()
@@ -116,9 +132,29 @@ class console_email_client:
             self.__display_retrieved_email()
         elif self.__current_mode == 3:
             self.__console_logout()
+            
+    def start_autoload(self):
+        # Read auto load config
+        with open(self.__user_config_file_path, 'r') as config_file:
+            config = json.load(config_file)
+        autoload_interval: int = config['General']['Autoload']
+        
+        start = time.time()
+        
+        while True:
+            if time.time() - start >= autoload_interval:
+                print("\nAutoload...")
+                self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
+                start = time.time()
+        
 
     def run(self):
         self.__console_login()
+        
+        # Start autoload on another thread
+        autoload_thread = threading.Thread(target=self.start_autoload)
+        autoload_thread.start()
+        
         while True:
             self.__change_mode()
             self.__run_current_mode()

@@ -2,9 +2,6 @@
 import json
 import mailbox
 
-# Local application imports
-from utilities import load_config
-
 import json
 import mailbox
 

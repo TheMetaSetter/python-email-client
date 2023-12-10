@@ -71,6 +71,9 @@ class client_socket:
 
             # Check if the server is ready
             if server_response[:3] != "+OK":
+                
+                print('.........')
+                
                 self.__socket.close()
                 raise Exception(server_response)
         except ConnectionRefusedError:

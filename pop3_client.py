@@ -1,6 +1,7 @@
 # Standard library imports
 import os
 import sys
+import signal
 
 # Third party imports
 import mailbox
@@ -8,6 +9,7 @@ import mailbox
 # Local application imports
 import client_socket
 from utilities import *
+from client_filter import email_filter
 
 # NOTES:
 # All id in this file starts from 0, only except for the id in the LIST command, which starts from 1.
@@ -15,7 +17,7 @@ from utilities import *
 
 
 class pop3_client:
-    def __init__(self, pop3_server: str, port: int, username: str, password: str = "12345678"):
+    def __init__(self, pop3_server: str, port: int, username: str, password: str = "12345678", config_file_path: str = None):
         """Initialize a pop3 client object and login to the server.
 
         Args:
@@ -25,12 +27,18 @@ class pop3_client:
             password (str, optional): password of the client. Defaults to "12345678".
         """
 
-        self.__socket = None
+        self.__socket: client_socket.client_socket = None
         self.__pop3_server = pop3_server
         self.__port = port
 
         self.__username = username
         self.__password = password
+        
+        self.__autoload_interval = None
+        
+        self.__filter: email_filter = None
+        
+        self.__path_to_config_file: str = config_file_path
 
         self.__path_to_local_mailboxes: str = f"Profiles/{self.__username}/Local Mailboxes"
         # Check if the local mailboxes folder exists
@@ -44,9 +52,6 @@ class pop3_client:
         # After the client object is created, it will automatically connect to the server and login.
         self.__connect()
         self.__login()
-
-        # Then, it will move all of the messages in the mailbox to the local mailbox and quit the session (close the connection).
-        self.__move_all_messages_to_local_mailboxes_and_quit()
 
     def __connect(self):
         """Connect to the server.
@@ -62,7 +67,7 @@ class pop3_client:
 
         print("Connect successful.")
 
-    def reconnect(self):
+    def __reconnect(self):
         """Reconnect to the pop3 server.
         """
 
@@ -70,7 +75,10 @@ class pop3_client:
 
         if self.__socket is None:
             self.__connect()
-            self.__login()
+        else:
+            self.__socket.connect()
+        
+        self.__login()
 
         print("Reconnect successful.")
 
@@ -79,16 +87,28 @@ class pop3_client:
         """
 
         self.__socket.send("QUIT")
+        
+        server_response = self.__socket.recieve_string()
+        if server_response[:3] != "+OK":
+            print("Quit session unsuccessful.")
+            self.__close()
+        else:
+            print("Quit session successful.")
 
     def close(self):
         """Close the connection to the server and the socket.
         """
 
-        # Close the connection to the server
-        self.__socket.close()
-
-        # Close the socket
-        self.__socket = None
+        print("Close connection to the POP3 server...")
+        
+        if self.__socket is not None:
+            # Close the connection to the server
+            self.__socket.close()
+            
+            # Close the socket
+            self.__socket = None
+        
+        print("Close connection successful.")
 
     def __login(self):
         """Login to the server.
@@ -183,7 +203,7 @@ class pop3_client:
         if server_response[:3] != "+OK":
             print("Delete unsuccessful.")
 
-    def __add_message_object_to_inbox(self, message: mailbox.mboxMessage):
+    def __add_message_object_to_local_mailboxes(self, message: mailbox.mboxMessage, local_mailbox_name: str):
         """Add an message object to the local mailbox.
 
         Args:
@@ -193,7 +213,7 @@ class pop3_client:
         path = self.__path_to_local_mailboxes
 
         # Create a file path
-        file_path = f"{path}/Inbox.mbox"
+        file_path = f"{path}/{local_mailbox_name}.mbox"
         
         # Create a mailbox object
         mbox = mailbox.mbox(file_path, create=True)
@@ -208,7 +228,7 @@ class pop3_client:
         finally:
             mbox.unlock()
 
-    def __move_all_messages_to_local_mailboxes_and_quit(self):
+    def move_all_messages_to_local_mailboxes_and_quit(self):
         """Move all of the messages in the mailbox to the local mailbox and quit the session.
         """
 
@@ -225,11 +245,16 @@ class pop3_client:
             # Convert the message in bytes to an message object
             message = self.__convert_message_bytes_to_message_object(
                 message_bytes)
-
-            # Add index and read status to message object
-
+            
+            # Create a filter object
+            if self.__filter is None:
+                self.__filter = email_filter(self.__path_to_config_file)
+            
+            # Get the local mailbox name of the message
+            local_mailbox_name = self.__filter.classify_email(message)
+            
             # Add message object to Inbox
-            self.__add_message_object_to_inbox(message)
+            self.__add_message_object_to_local_mailboxes(message, local_mailbox_name)
 
             # Delete the message on the server
             self.__delete_message_on_server(id)
@@ -308,9 +333,13 @@ class pop3_client:
                 path = None
                 if self.__path_to_save_attachments is not None:
                     print("Last-used path: ", self.__path_to_save_attachments)
-                    print(
-                        "Do you want to use this path to save the file? Type 1 for Yes, 0 for No.")
-                    path = self.__path_to_save_attachments
+                    
+                    print("Do you want to use this path to save the file? Type 1 for Yes, 0 for No.")
+                    choice = int(input())
+                    if choice == 1:
+                        path = self.__path_to_save_attachments
+                    else:
+                        path = str(input("Enter path to save the file: "))
                 else:
                     path = str(input("Enter path to save the file: "))
 
@@ -405,6 +434,7 @@ class pop3_client:
 
         mbox = mailbox.mbox(mailbox_file_path)
 
+        # mbox.lock()
         # Display all of the summary of messages in the mailbox
         for id, message in enumerate(mbox):
             # Print the count of the message without the endline character
@@ -447,3 +477,7 @@ class pop3_client:
                 break
             
             mbox.flush()
+            # mbox.unlock()
+    
+    def set_path_to_config_file(self, path: str):
+        self.__path_to_config_file = path
