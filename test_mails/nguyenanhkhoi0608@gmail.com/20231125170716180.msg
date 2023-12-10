@@ -1,12 +1,12 @@
 Subject: Test mail 01
-From: tin75vn@gmail.com
+From: tin75@gmail.com
 To: nguyenanhkhoi0608@gmail.com
 Content-Type: multipart/mixed; boundary=GSuWlvrcNSHcgpJg
 
 --GSuWlvrcNSHcgpJg
 Content-Type: text/plain
 
-This is a test email.
+This is a test email. <virus>
 --GSuWlvrcNSHcgpJg
 Content-Type:application/pdf; charset=UTF-8;name ="Python for data science Cheat Sheet.pdf"
 Content-Disposition: attachment; filename="Python for data science Cheat Sheet.pdf"

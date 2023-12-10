@@ -18,7 +18,7 @@ class client_socket:
 
         self.__BYTES_PER_RECIEVE = 1024
 
-        # These are public attributes.
+    # These are public methods.
 
     def recieve_string(self) -> str:
         """Recieve a message in string format from the server.
@@ -61,7 +61,8 @@ class client_socket:
 
         try:
             # Create a socket object
-            self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.__socket is None:
+                self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             # Connect to the server
             self.__socket.connect((self.__address, self.__port))
@@ -71,20 +72,21 @@ class client_socket:
 
             # Check if the server is ready
             if server_response[:3] != "+OK":
-                
-                print('.........')
-                
                 self.__socket.close()
                 raise Exception(server_response)
+            
         except ConnectionRefusedError:
             print(self.__error_dict[ConnectionRefusedError])
             sys.exit(1)
-
+            
         except socket.gaierror:
             print(self.__error_dict[socket.gaierror])
             sys.exit(1)
 
     def close(self):
+        if self.__socket is None:
+            return
+        
         # Close the connection
         self.__socket.close()
 

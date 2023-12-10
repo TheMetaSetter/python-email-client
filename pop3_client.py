@@ -34,8 +34,6 @@ class pop3_client:
         self.__username = username
         self.__password = password
         
-        self.__autoload_interval = None
-        
         self.__filter: email_filter = None
         
         self.__path_to_config_file: str = config_file_path
@@ -91,7 +89,7 @@ class pop3_client:
         server_response = self.__socket.recieve_string()
         if server_response[:3] != "+OK":
             print("Quit session unsuccessful.")
-            self.__close()
+            self.close()
         else:
             print("Quit session successful.")
 
@@ -231,7 +229,7 @@ class pop3_client:
     def move_all_messages_to_local_mailboxes_and_quit(self):
         """Move all of the messages in the mailbox to the local mailbox and quit the session.
         """
-
+        
         print("Collecting new messages from server...")
 
         # Get the number of messages in the mailbox

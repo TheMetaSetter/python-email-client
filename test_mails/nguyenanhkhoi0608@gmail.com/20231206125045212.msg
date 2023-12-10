@@ -1,5 +1,5 @@
 Subject: Test mail 03
-From: tin75vn@gmail.com
+From: tin1975@gmail.com
 To: nguyenanhkhoi0608@gmail.com
 Content-Type: multipart/mixed; boundary=XSttR0qifWhG4lxV
 

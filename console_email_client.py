@@ -29,21 +29,30 @@ class console_email_client:
         try:
             username = input("Username: ")
             
-            while not is_valid_email(username):
+            max_attempt = 3
+            while not is_valid_email(username) and max_attempt > 0:
                 print("Invalid email.")
                 username = input("Username: ")
+                max_attempt -= 1
+            
+            if max_attempt == 0:
+                print("Too many attempts.")
+                exit(1)
             
             password = input("Password: ")
 
+            # Try to login to the smtp server
             self.__smtp_client = smtp_client.smtp_client(
                 self.__smtp_server_address, self.__smtp_port, username, password)
             
+            # Try to login to the pop3 server
             self.__pop3_client = pop3_client.pop3_client(
                 self.__pop3_server_address, self.__pop3_port, username, password)
             
         except Exception as e:
             print(e)
             exit(1)
+            
         else:
             # After login successfully, set current user
             self.__current_user = username
@@ -106,7 +115,11 @@ class console_email_client:
 
         choice = int(input("You want to check email in folder number: "))
 
-        self.__pop3_client.check_mailbox(self.__mailboxes_dict[choice])
+        try:
+            self.__pop3_client.check_mailbox(self.__mailboxes_dict[choice])
+        except KeyError:
+            print("Invalid folder number.")
+            return
 
     def __display_menu(self):
         print("Select from the options below:")
@@ -146,7 +159,6 @@ class console_email_client:
                 print("\nAutoload...")
                 self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
                 start = time.time()
-        
 
     def run(self):
         self.__console_login()
