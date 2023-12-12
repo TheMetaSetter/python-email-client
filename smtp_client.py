@@ -54,7 +54,7 @@ class smtp_client:
             print("Invalid email address: ")
             for email in invalid:
                 print(email)
-            print("\n")
+                
         return valid
     
     @staticmethod
@@ -155,7 +155,7 @@ class smtp_client:
                 self.__socket.recv(1024)
                 self.__socket.close()
 
-                print("\nEmail sent successfully\n\n")
+                print("Email sent successfully.\n\n")
             except Exception as error:
                 print("Error: ", error)
                 
