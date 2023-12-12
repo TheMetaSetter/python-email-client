@@ -2,9 +2,6 @@
 import json
 import mailbox
 
-import json
-import mailbox
-
 class filter_rule:
     def __init__(self, rule):
         self.from_addresses = rule.get('From', [])
@@ -12,7 +9,6 @@ class filter_rule:
         self.content_keywords = rule.get('Content', [])
         self.spam_keywords = rule.get('Spam', [])
         self.to_folder = rule.get('ToFolder', 'Inbox')
-
 class email_filter:
     def __init__(self, config_file_path):
         self.config = self.load_config(config_file_path)
@@ -23,13 +19,19 @@ class email_filter:
         return [filter_rule(rule) for rule in config.get('Filter', [])]
 
     def classify_email(self, email: mailbox.mboxMessage):
+        print(email)
+
         sender = email['From']
         subject = email['Subject']
         payload = email.get_payload()
 
-        text_part = payload[0]
-
-        content = text_part.get_payload()
+        if isinstance(payload, list):
+            # If there are multiple parts, assume the first part is the text/plain part
+            text_part = payload[0]
+            content = text_part.get_payload()
+        else:
+            # If there is only one part, treat it as the text/plain part
+            content = payload
 
         for filter_rule in self.config:
             if filter_rule.from_addresses and any(addr in sender for addr in filter_rule.from_addresses):

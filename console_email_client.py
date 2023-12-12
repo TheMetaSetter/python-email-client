@@ -163,9 +163,9 @@ class console_email_client:
     def run(self):
         self.__console_login()
         
-        # Start autoload on another thread
-        autoload_thread = threading.Thread(target=self.start_autoload)
-        autoload_thread.start()
+        # # Start autoload on another thread
+        # autoload_thread = threading.Thread(target=self.start_autoload)
+        # autoload_thread.start()
         
         while True:
             self.__change_mode()
