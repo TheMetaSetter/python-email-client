@@ -29,15 +29,9 @@ class console_email_client:
         try:
             username = input("Username: ")
             
-            max_attempt = 3
-            while not is_valid_email(username) and max_attempt > 0:
+            while not is_valid_email(username):
                 print("Invalid email.")
                 username = input("Username: ")
-                max_attempt -= 1
-            
-            if max_attempt == 0:
-                print("Too many attempts.")
-                exit(1)
             
             password = input("Password: ")
 
