@@ -73,7 +73,7 @@ class pop3_client:
         
         self.login()
 
-    def _quit(self):
+    def __quit(self):
         """Quit session
         """
 
@@ -83,12 +83,12 @@ class pop3_client:
         if server_response[:3] != "+OK":
             print("Quit session unsuccessful.")
             self.close()
-        else:
-            print("Quit session successful.")
 
     def close(self):
-        """Close the connection to the server and the socket.
+        """Quit session and close the connection to the server and the socket.
         """
+
+        self.__quit()
         
         if self.__socket is not None:
             # Close the connection to the server
@@ -202,15 +202,11 @@ class pop3_client:
         # Create a mailbox object
         mbox = mailbox.mbox(file_path, create=True)
 
-        mbox.lock()
-        try:
-            # Add the message object to the mailbox
-            mbox.add(message)
+        # Add the message object to the mailbox
+        mbox.add(message)
 
-            # Save the mailbox
-            mbox.flush()
-        finally:
-            mbox.unlock()
+        # Save the mailbox
+        mbox.flush()
 
     def move_all_messages_to_local_mailboxes_and_close(self):
         """Move all of the messages in the mailbox to the local mailbox and quit the session.
@@ -267,24 +263,21 @@ class pop3_client:
             mailbox (mailbox.mbox): The mailbox object.
             id (int): The id of the message
         """
-        mbox.lock()
-        try:
-            # Get the message
-            message = mbox[id]
 
-            # Get the flags
-            flags = message.get_flags()
+        # Get the message
+        message = mbox[id]
 
-            # If the message is unread
-            if "R" not in flags:
-                # Mark the message as read
-                message.set_flags("R")
-            
-            mbox[id] = message
-            
-            mbox.flush()
-        finally:
-            mbox.unlock()
+        # Get the flags
+        flags = message.get_flags()
+
+        # If the message is unread
+        if "R" not in flags:
+            # Mark the message as read
+            message.set_flags("R")
+        
+        mbox[id] = message
+        
+        mbox.flush()
 
     def __count_attachments(self, message: mailbox.mboxMessage) -> int:
         count = 0
@@ -416,7 +409,6 @@ class pop3_client:
 
         mbox = mailbox.mbox(mailbox_file_path)
 
-        # mbox.lock()
         # Display all of the summary of messages in the mailbox
         for id, message in enumerate(mbox):
             # Print the count of the message without the endline character
@@ -459,7 +451,6 @@ class pop3_client:
                 break
             
             mbox.flush()
-            # mbox.unlock()
     
     def set_path_to_config_file(self, path: str):
         self.__path_to_config_file = path

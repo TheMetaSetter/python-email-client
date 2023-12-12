@@ -69,9 +69,6 @@ class console_email_client:
     def __console_logout(self):
         self.__current_user = str()
 
-        if self.__pop3_client is not None:
-            self.__pop3_client.close()
-
         if self.__smtp_client is not None:
             self.__smtp_client.__exit__
 
@@ -162,7 +159,7 @@ class console_email_client:
     def run(self):
         self.__console_login()
 
-        autoload_thread = threading.Thread(target=self.start_autoload())
+        autoload_thread = threading.Thread(target=self.start_autoload, daemon=True)
         autoload_thread.start()
         
         while True:

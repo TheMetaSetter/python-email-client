@@ -19,8 +19,6 @@ class email_filter:
         return [filter_rule(rule) for rule in config.get('Filter', [])]
 
     def classify_email(self, email: mailbox.mboxMessage):
-        print(email)
-
         sender = email['From']
         subject = email['Subject']
         payload = email.get_payload()
