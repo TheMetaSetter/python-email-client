@@ -64,7 +64,7 @@ class console_email_client:
             self.__pop3_client.set_path_to_config_file(self.__user_config_file_path)
             
             # Move all messages to local mailboxes
-            self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
+            self.__pop3_client.move_all_messages_to_local_mailboxes_and_close()
 
     def __console_logout(self):
         self.__current_user = str()
@@ -156,7 +156,7 @@ class console_email_client:
             time.sleep(autoload_interval)
             self.__pop3_client.reconnect()
             self.__pop3_client.login()
-            self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
+            self.__pop3_client.move_all_messages_to_local_mailboxes_and_close()
             
 
     def run(self):

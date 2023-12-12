@@ -212,7 +212,7 @@ class pop3_client:
         finally:
             mbox.unlock()
 
-    def move_all_messages_to_local_mailboxes_and_quit(self):
+    def move_all_messages_to_local_mailboxes_and_close(self):
         """Move all of the messages in the mailbox to the local mailbox and quit the session.
         """
 
