@@ -302,16 +302,17 @@ class pop3_client:
             file_name = part.get_filename()
 
             print(f"{count}.{file_name}")
-            print("Do you want to save this file? Type 1 for Yes, 0 for No.")
-            choice = input()
-            if choice == "1":
+            
+            choice = input_integer("Do you want to save this file? Type 1 for Yes, 0 for No.")
+            
+            if choice == 1:
                 path = None
                 if self.__path_to_save_attachments is not None:
                     print("Last-used path: ", self.__path_to_save_attachments)
                     
-                    print("Do you want to use this path to save the file? Type 1 for Yes, 0 for No.")
-                    choice = input()
-                    if choice == "1":
+                    choice = input_integer("Do you want to use this path? Type 1 for Yes, 0 for No.")
+                    
+                    if choice == 1:
                         path = self.__path_to_save_attachments
                     else:
                         path = str(input("Enter path to save the file: "))
@@ -340,11 +341,9 @@ class pop3_client:
 
         choice = 0
         if attachments_count > 0:
-            print(
-                "This message have attached file. Do you want to save? Type 1 for Yes, 0 for No.")
-            choice = input()
+            choice = input_integer("Do you want to save the attachments? Type 1 for Yes, 0 for No.")
 
-        if choice == "1":
+        if choice == 1:
             self.__save_attachments(message)
 
     def __dipslay_message_summary(self, message: mailbox.mboxMessage):
@@ -418,15 +417,9 @@ class pop3_client:
 
         while True:
             # Ask the user to choose which message to display
-            choice = input(
-                "Display message number (or press Enter to stop checking or type 0 to display all messages in the mailbox): ")
+            choice = input_integer("Enter the number of the message you want to display. Enter 0 to display all messages. Enter any other number to exit.")
             # NOTES: Message number starts from 1 but the index of the message in the mailbox starts from 0.
             # Therefore, we need to subtract 1 from the choice to get the index of the message in the mailbox.
-            
-            try:
-                choice = int(choice)
-            except ValueError:
-                break
 
             # If user choose to display message number count
             if choice != 0:
