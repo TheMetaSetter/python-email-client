@@ -77,29 +77,64 @@ class console_email_client:
         exit(0)
 
     def __send_email(self):
-        print("This is the information to compose an email: (If not filled in, please press enter to skip)")
+        print("This is the information to compose an email: ")
+        print("(If not filled in, please press 'enter' to skip)")
+        print("(If you want to cancel sending mail, enter '***')")
         temp_to = input("To: ")
-        to_receivers = self.__smtp_client.email_list(temp_to)
-
+        if temp_to =="***":
+            print("Canceled sending email!!!\n")
+            return
+        
         temp_cc = input("Cc: ")
-        cc_receivers = self.__smtp_client.email_list(temp_cc)
-
+        if temp_cc=="***" :
+            print("Canceled sending email!!!\n")
+            return
+        
         temp_bcc = input("BCC: ")
-        bcc_receivers = self.__smtp_client.email_list(temp_bcc)
-
+        if temp_bcc =="***":
+            print("Canceled sending email!!!\n")
+            return
+        
         subject = input("Subject: ")
-
+        if subject=="***" :
+            print("Canceled sending email!!!\n")
+            return
+        
         content = input("Content: ")
+        if content == "***":
+            print("Canceled sending email!!!\n")
+            return
+        
+        have_file =""
+        while True:
+            have_file = input("Are files attached? (1. yes, 2. no): ")
+            if have_file =="1"or have_file=="2"or have_file=="***":
+                break
+            else:
+                print("Invalid character, only 1 or 2 or '***' can be entered here. Please re-enter!!!")
+        
+        if have_file=="***":
+            print("Canceled sending email!!!\n")
+            return
+        
+        else:
+            to_receivers = self.__smtp_client.email_list(temp_to)
 
-        have_file = int(input("Are files attached? (1. yes, 2. no): "))
-        path_list = []
-        if have_file == 1:
-            file_amount = int(input("Number of files you want to send: "))
-            for i in range(1, file_amount + 1):
-                path = input(f"Indicates the file path {i}: ")
-                path_list.append(path)
+            cc_receivers = self.__smtp_client.email_list(temp_cc)
 
-        self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
+            bcc_receivers = self.__smtp_client.email_list(temp_bcc)
+            if to_receivers or cc_receivers or bcc_receivers:
+                path_list = []
+                if have_file == "1" :
+                    file_amount = int(input("Number of files you want to send: "))
+                    for i in range(1, file_amount + 1):
+                        path = input(f"Indicates the file path {i}: ")
+                        path_list.append(path)       
+
+                self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
+            else:
+                print("There are no valid emails. Sending email failed!!!\n\n")
+                return
 
     def __display_retrieved_email(self):
         print("List of your mailboxes:")
@@ -115,7 +150,7 @@ class console_email_client:
         try:
             self.__pop3_client.check_mailbox(self.__mailboxes_dict[choice])
         except KeyError:
-            print("Invalid folder number.")
+            print("Invalid folder number.\n")
             return
 
     def __display_menu(self):
