@@ -153,6 +153,7 @@ class smtp_client:
                 quit_cmd = "QUIT\r\n"
                 self.__socket.send(quit_cmd.encode())
                 self.__socket.recv(1024)
+                self.__socket.close()
 
                 print("\nEmail sent successfully\n\n")
             except Exception as error:

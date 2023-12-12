@@ -49,38 +49,31 @@ class pop3_client:
 
         # After the client object is created, it will automatically connect to the server and login.
         self.__connect()
-        self.__login()
+        self.login()
 
     def __connect(self):
         """Connect to the server.
         """
 
-        print("Connect to the POP3 server...")
         # Create a socket object
         self.__socket = client_socket.client_socket(
             self.__pop3_server, self.__port)
 
         # Connect to the server
         self.__socket.connect()
-
-        print("Connect successful.")
-
-    def __reconnect(self):
-        """Reconnect to the pop3 server.
+    
+    def reconnect(self):
+        """Reconnect to the pop3 server after using close().
         """
-
-        print("Reconnect to the POP3 server...")
 
         if self.__socket is None:
             self.__connect()
         else:
             self.__socket.connect()
         
-        self.__login()
+        self.login()
 
-        print("Reconnect successful.")
-
-    def quit(self):
+    def _quit(self):
         """Quit session
         """
 
@@ -96,8 +89,6 @@ class pop3_client:
     def close(self):
         """Close the connection to the server and the socket.
         """
-
-        print("Close connection to the POP3 server...")
         
         if self.__socket is not None:
             # Close the connection to the server
@@ -105,14 +96,11 @@ class pop3_client:
             
             # Close the socket
             self.__socket = None
-        
-        print("Close connection successful.")
 
-    def __login(self):
+    def login(self):
         """Login to the server.
         """
 
-        print("Logging in...")
         self.__socket.send("USER " + self.__username)
         server_response = self.__socket.recieve_string()
 
@@ -126,8 +114,6 @@ class pop3_client:
         if server_response[:3] != "+OK":
             self.__socket.close()
             raise Exception("The password is invalid.")
-
-        print("Login successful.")
 
     def get_message_count(self) -> int:
         """Get the number of messages in the mailbox.
@@ -229,8 +215,6 @@ class pop3_client:
     def move_all_messages_to_local_mailboxes_and_quit(self):
         """Move all of the messages in the mailbox to the local mailbox and quit the session.
         """
-        
-        print("Collecting new messages from server...")
 
         # Get the number of messages in the mailbox
         message_count = self.get_message_count()
@@ -258,7 +242,7 @@ class pop3_client:
             self.__delete_message_on_server(id)
 
         # Quit the session
-        self.quit()
+        self.close()
 
     def get_list_mailboxes(self) -> list[str]:
         """Get the list of mailboxes of the user.

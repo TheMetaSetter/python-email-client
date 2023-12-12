@@ -152,20 +152,18 @@ class console_email_client:
             config = json.load(config_file)
         autoload_interval: int = config['General']['Autoload']
         
-        start = time.time()
-        
         while True:
-            if time.time() - start >= autoload_interval:
-                print("\nAutoload...")
-                self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
-                start = time.time()
+            time.sleep(autoload_interval)
+            self.__pop3_client.reconnect()
+            self.__pop3_client.login()
+            self.__pop3_client.move_all_messages_to_local_mailboxes_and_quit()
+            
 
     def run(self):
         self.__console_login()
-        
-        # # Start autoload on another thread
-        # autoload_thread = threading.Thread(target=self.start_autoload)
-        # autoload_thread.start()
+
+        autoload_thread = threading.Thread(target=self.start_autoload())
+        autoload_thread.start()
         
         while True:
             self.__change_mode()

@@ -14,6 +14,8 @@ class client_socket:
             ConnectionRefusedError: "client_socket.py: The server might not listening.",
             socket.gaierror: "client_socket.py: The hostname or the service you’re trying to connect to cannot be resolved.",
             BrokenPipeError: "client_socket.py: The server is not ready.",
+            ConnectionAbortedError: "client_socket.py: An established connection was aborted by the software in your host machine",
+            OSError: "[WinError 10056] A connect request was made on an already connected socket"
         }
 
         self.__BYTES_PER_RECIEVE = 1024
@@ -26,8 +28,11 @@ class client_socket:
         Returns:
             str: The message recieved from the server.
         """
-
-        return self.__socket.recv(self.__BYTES_PER_RECIEVE).decode('utf-8')
+        try:
+            return self.__socket.recv(self.__BYTES_PER_RECIEVE).decode('utf-8')
+        except ConnectionAbortedError:
+            print(self.__error_dict[ConnectionAbortedError])
+            sys.exit(1)
 
     def recieve_bytes(self) -> bytes:
         """Recieve a message in bytes from the server.
@@ -50,6 +55,9 @@ class client_socket:
             self.__socket.send(message)
         except BrokenPipeError:
             print(self.__error_dict[BrokenPipeError])
+            sys.exit(1)
+        except Exception:
+            print(Exception)
             sys.exit(1)
 
     def connect(self):
@@ -81,6 +89,10 @@ class client_socket:
             
         except socket.gaierror:
             print(self.__error_dict[socket.gaierror])
+            sys.exit(1)
+
+        except OSError:
+            print(self.__error_dict[OSError])
             sys.exit(1)
 
     def close(self):
