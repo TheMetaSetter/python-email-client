@@ -5,3 +5,5 @@ java --module-path $PATH_TO_FX --add-modules javafx.controls,javafx.fxml -jar te
 
 /Users/conquerormikrokosmos/Downloads/LAPTOP MAC/IT/Python for data science Cheat Sheet.pdf
 /Users/conquerormikrokosmos/Downloads/LAPTOP MAC/IT/stdc++.h
+
+java -jar test-mail-server-1.0.jar -s 2225 -p 3335 -m ./
