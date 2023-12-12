@@ -303,15 +303,15 @@ class pop3_client:
 
             print(f"{count}.{file_name}")
             print("Do you want to save this file? Type 1 for Yes, 0 for No.")
-            choice = int(input())
-            if choice == 1:
+            choice = input()
+            if choice == "1":
                 path = None
                 if self.__path_to_save_attachments is not None:
                     print("Last-used path: ", self.__path_to_save_attachments)
                     
                     print("Do you want to use this path to save the file? Type 1 for Yes, 0 for No.")
-                    choice = int(input())
-                    if choice == 1:
+                    choice = input()
+                    if choice == "1":
                         path = self.__path_to_save_attachments
                     else:
                         path = str(input("Enter path to save the file: "))
@@ -342,9 +342,9 @@ class pop3_client:
         if attachments_count > 0:
             print(
                 "This message have attached file. Do you want to save? Type 1 for Yes, 0 for No.")
-            choice = int(input())
+            choice = input()
 
-        if choice == 1:
+        if choice == "1":
             self.__save_attachments(message)
 
     def __dipslay_message_summary(self, message: mailbox.mboxMessage):
