@@ -94,10 +94,15 @@ class console_email_client:
             print("Canceled sending email!!!\n")
             return
         
-        content = input("Content: ")
-        if content == "***":
-            print("Canceled sending email!!!\n")
-            return
+        content = ""
+        temp = "-"
+        print("Content(Press 'enter' twice to end the content): ")
+        while temp != "":
+            temp = input("  ")
+            if temp == "***":
+                print("Canceled sending email!!!\n")
+                return
+            content = content + temp + "\n"
         
         have_file =""
         while True:
