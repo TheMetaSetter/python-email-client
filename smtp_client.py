@@ -4,8 +4,8 @@ import os
 import random
 import string
 
-# Third party imports
 import socket
+import ssl
 
 from utilities import *
 
@@ -103,7 +103,18 @@ class smtp_client:
             try:
                 self.__socket.connect((self.__smtp_server, self.__port))
                 self.__socket.sendall(b'EHLO \r\n')
-                self.__socket.recv(1024)
+                
+                # Check TLS protocol support
+                ehlo_response = self.__socket.recv(1024).decode()
+                if 'STARTTLS' in ehlo_response:
+                    # Send the STARTTLS command to initiate a secure connection
+                    self.__socket.sendall(b'STARTTLS\r\n')
+                    tls_response = self.__socket.recv(1024).decode()
+
+                    if 'Ready to start TLS' in tls_response:
+                        # Wrap the connection with the TLS protocol
+                        context = ssl.create_default_context()
+                        self.__socket = context.wrap_socket(self.__socket, server_hostname=self.__smtp_server)
 
                 # Send MAIL FROM
                 mail_from = "MAIL FROM: <{}>\r\n".format(self.__username)
@@ -157,7 +168,7 @@ class smtp_client:
                 self.__socket.recv(1024)
                 self.__socket.close()
 
-                print("Email sent successfully.")
+                print("\nEmail sent successfully.\n")
             except Exception as error:
                 print("Error: ", error)
                 
