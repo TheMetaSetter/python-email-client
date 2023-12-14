@@ -18,7 +18,7 @@ class client_socket:
             OSError: "[WinError 10056] A connect request was made on an already connected socket"
         }
 
-        self.__BYTES_PER_RECIEVE = 1024 * 1000
+        self.__BYTES_PER_RECIEVE = 1000000000
 
     # These are public methods.
 

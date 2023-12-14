@@ -9,7 +9,6 @@ import socket
 
 from utilities import *
 
-
 class smtp_client:
     def __init__(self, smtp_server: str, port: int, username: str, password: str = "12345678"):
         self.__socket = None
@@ -155,7 +154,7 @@ class smtp_client:
                 self.__socket.recv(1024)
                 self.__socket.close()
 
-                print("Email sent successfully.\n\n")
+                print("Email sent successfully.")
             except Exception as error:
                 print("Error: ", error)
                 
