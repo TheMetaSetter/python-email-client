@@ -1,6 +1,7 @@
 import json
 import threading
 import time
+import os
 
 import pop3_client
 import smtp_client
@@ -61,32 +62,71 @@ class console_email_client:
             self.__pop3_client.move_all_messages_to_local_mailboxes_and_close()
 
     def __console_logout(self):
-        self.__current_user = str()
+        flag = input("Do you want to quit?(Type 1 for Yes, order keys for No): ")
+        if flag == "1":
+            self.__current_user = str()
 
-        if self.__smtp_client is not None:
-            self.__smtp_client.__exit__
+            if self.__smtp_client is not None:
+                self.__smtp_client.__exit__
 
-        print("Logout completed.")
+            print("Logout completed.")
 
-        exit(0)
+            exit(0)
+        else:
+            print("Canceled logout!!!\n")
+            return 
 
     def __send_email(self):
         print("This is the information to compose an email: ")
         print("(If not filled in, please press 'enter' to skip)")
         print("(If you want to cancel sending mail, enter '***')")
-        temp_to = input("To: ")
-        if temp_to =="***":
-            print("Canceled sending email!!!\n")
-            return
-        
-        temp_cc = input("Cc: ")
-        if temp_cc=="***" :
-            print("Canceled sending email!!!\n")
-            return
-        
-        temp_bcc = input("BCC: ")
-        if temp_bcc =="***":
-            print("Canceled sending email!!!\n")
+        while True:
+            temp_to = input("To: ")
+            if temp_to =="***":
+                print("Canceled sending email!!!\n")
+                return
+            to_receivers,flag = self.__smtp_client.email_list(temp_to, "'To'")
+            if flag == 1:
+                buf = input("Select 1 to re-enter all valid emails you want to send or Select any other key to continue to other sections: ")
+                if buf == "1":
+                    continue
+                else:
+                    break
+            else:
+                break
+                
+        while True:    
+            temp_cc = input("CC: ")
+            if temp_cc=="***" :
+                print("Canceled sending email!!!\n")
+                return
+            cc_receivers,flag = self.__smtp_client.email_list(temp_cc, "'CC'")
+            if flag == 1:
+                buf = input("Select 1 to re-enter all valid emails you want to send or Select any other key to continue to other sections: ")
+                if buf == "1":
+                    continue
+                else:
+                    break
+            else:
+                break
+                
+        while True:    
+            temp_bcc = input("BCC: ")
+            if temp_bcc =="***":
+                print("Canceled sending email!!!\n")
+                return
+            bcc_receivers,flag = self.__smtp_client.email_list(temp_bcc, "'BCC'")
+            if flag == 1:
+                buf = input("Select 1 to re-enter all valid emails you want to send or Select any other key to continue to other sections: ")
+                if buf == "1":
+                    continue
+                else:
+                    break
+            else:
+                break
+                
+        if not to_receivers and not cc_receivers and not bcc_receivers:
+            print("There are no valid emails. Sending email failed!!!\n\n")
             return
         
         subject = input("Subject: ")
@@ -95,15 +135,20 @@ class console_email_client:
             return
         
         content = ""
-        temp = "-"
-        print("Content(Press 'enter' twice to end the content): ")
-        while temp != "":
-            temp = input("  ")
-            if temp == "***":
-                print("Canceled sending email!!!\n")
-                return
-            content = content + temp + "\n"
-        
+        while True:
+            temp = "-"
+            print("Content(Press 'enter' twice to end the content): ")
+            while temp != "":
+                temp = input("  ")
+                if temp == "***":
+                    print("Canceled sending email!!!\n")
+                    return
+                content = content + temp + "\n"
+            if content == "\n":
+                print("The content cannot be empty. Please re-enter or enter '***' to cancel sending the email!!!") 
+            else:
+                break
+                
         have_file =""
         while True:
             have_file = input("Are files attached? (1. yes, 2. no): ")
@@ -117,23 +162,28 @@ class console_email_client:
             return
         
         else:
-            to_receivers = self.__smtp_client.email_list(temp_to)
-
-            cc_receivers = self.__smtp_client.email_list(temp_cc)
-
-            bcc_receivers = self.__smtp_client.email_list(temp_bcc)
-            if to_receivers or cc_receivers or bcc_receivers:
-                path_list = []
-                if have_file == "1" :
-                    file_amount = int(input("Number of files you want to send: "))
-                    for i in range(1, file_amount + 1):
+            path_list = []
+            if have_file == "1" :
+                file_amount = int(input("Number of files you want to send: "))
+                for i in range(1, file_amount + 1):
+                    while True:
                         path = input(f"Indicates the file path {i}: ")
-                        path_list.append(path)       
-
-                self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
-            else:
-                print("There are no valid emails. Sending email failed!!!\n\n")
-                return
+                        if path == "***":
+                            print("Canceled sending email!!!\n")
+                            return
+                        if os.path.exists(path):
+                            path_list.append(path)
+                            break
+                        else:
+                            print(f"The file {path} does not exist. Please re-enter or enter '***' to cancel sending the email!!!")
+                      
+                    
+                if self.__smtp_client.check_list_file_size(path_list, 3) == False:
+                    print("The size of the attached files is larger than 3MB so it cannot be sent. Sending email failed!!!\n")
+                    return 
+                                
+            self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
+                
 
     def __display_retrieved_email(self):
         print("List of your mailboxes:")
@@ -161,10 +211,10 @@ class console_email_client:
     def __change_mode(self):
         self.__display_menu()
 
-        mode = input("Your choose mode number: ")
+        mode = input("\nYour choose mode number: ")
         
         while mode not in ["1", "2", "3"]:
-            print("Invalid mode number.")
+            print("Invalid mode number. Please select again!!!")
             mode = input("Your choose mode number: ")
 
         self.__current_mode = int(mode)

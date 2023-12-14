@@ -399,13 +399,13 @@ class pop3_client:
                 chars = bytes.decode(charset, 'replace')
                 print("\nContent: ")
                 print(chars)
+                print("\n")
                 continue
 
             # If the part is an attachment
             if part.get('Content-Disposition') is not None:
-                print("\nAttachments: ")
                 file_name = part.get_filename()
-                print(f"{count}. {file_name}")
+                print(f"Attachment: {count}. {file_name}")
                 count += 1
 
         self.__ask_to_save_attachments(message)

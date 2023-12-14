@@ -39,7 +39,7 @@ class smtp_client:
         return True
     
     @staticmethod   
-    def email_list(str_info):
+    def email_list(str_info, type):
         mails = str_info.split(',')
         mails = [email.strip() for email in mails]
         mails = [email for email in mails if email]
@@ -51,11 +51,13 @@ class smtp_client:
             else:
                 invalid.append(email)
         if invalid:
-            print("Invalid email address: ")
+            flag = 1
+            print(f"Invalid email addresses in {type}: ")
             for email in invalid:
                 print(email)
-                
-        return valid
+        else:
+            flag = 0        
+        return valid, flag
     
     @staticmethod
     def get_type_content_file(path):
@@ -83,12 +85,15 @@ class smtp_client:
             f'Content-Disposition: attachment; filename="{attachment_filename}"\r\n'.encode())
 
         # Attach the file
-        with open(path, 'rb') as file:
-            attachment_data = base64.b64encode(file.read()).decode()
-            self.__socket.send(f'Content-Transfer-Encoding: base64\r\n\r\n'.encode())
-            for data in range(0, len(attachment_data), 72):
-                line = attachment_data[data:data+72]
-                self.__socket.send(f'{line}\r\n'.encode())
+        try:
+            with open(path, 'rb') as file:
+                attachment_data = base64.b64encode(file.read()).decode()
+                self.__socket.send(f'Content-Transfer-Encoding: base64\r\n\r\n'.encode())
+                for data in range(0, len(attachment_data), 72):
+                    line = attachment_data[data:data+72]
+                    self.__socket.send(f'{line}\r\n'.encode())
+        except Exception as e:
+            print("Error: ",e)
 
     @staticmethod
     def generate_boundary():
@@ -137,12 +142,10 @@ class smtp_client:
                 self.__socket.send(f'Content-Type: text/plain\r\n\r\n{content}\r\n'.encode())
 
                 # Send file attachments
-                
                 if path_list:
-                    if self.check_list_file_size(path_list, 3):
-                            for items_file in path_list:
-                                self.send_file(items_file, boundary)
-
+                    for items_file in path_list:
+                        self.send_file(items_file, boundary)
+                    
                 # End mail
                 self.__socket.send(f'\r\n--{boundary}--\r\n'.encode())
                 end = f'.\r\n'
