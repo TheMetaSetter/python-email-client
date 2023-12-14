@@ -18,7 +18,7 @@ class client_socket:
             OSError: "[WinError 10056] A connect request was made on an already connected socket"
         }
 
-        self.__BYTES_PER_RECIEVE = 1024 * 1024
+        self.__BYTES_PER_RECIEVE = 1024 * 1000
 
     # These are public methods.
 
@@ -55,9 +55,6 @@ class client_socket:
             self.__socket.send(message)
         except BrokenPipeError:
             print(self.__error_dict[BrokenPipeError])
-            sys.exit(1)
-        except Exception:
-            print(Exception)
             sys.exit(1)
 
     def connect(self):

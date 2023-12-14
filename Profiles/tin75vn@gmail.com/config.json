@@ -1,39 +1,27 @@
 {
   "General": {
-    "Username": "hailong552004@gmail.com",
-    "Password": "123456789",
-    "MailServer": "192.168.1.10",
+    "Username": "tin75vn@gmail.com",
+    "Password": null,
+    "MailServer": "127.0.0.1",
     "SMTP": 2225,
     "POP3": 3335,
     "Autoload": 10
   },
   "Filter": [
     {
-      "From": [
-        "tin75vn@gmail.com"
-      ],
+      "From": [],
       "ToFolder": "Project"
     },
     {
-      "Subject": [
-        "urgent",
-        "ASAP"
-      ],
+      "Subject": [],
       "ToFolder": "Important"
     },
     {
-      "Content": [
-        "report",
-        "meeting"
-      ],
+      "Content": [],
       "ToFolder": "Work"
     },
     {
-      "Spam": [
-        "virus",
-        "hack",
-        "crack"
-      ],
+      "Spam": [],
       "ToFolder": "Spam"
     }
   ]

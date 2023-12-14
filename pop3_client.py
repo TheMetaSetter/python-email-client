@@ -1,7 +1,6 @@
 # Standard library imports
 import os
 import sys
-import signal
 
 # Third party imports
 import mailbox
@@ -294,47 +293,43 @@ class pop3_client:
     def __save_attachments(self, message: mailbox.mboxMessage):
         count = 1
         for part in message.walk():
-            if part.get_content_maintype() == 'multipart':
-                continue
-            if part.get('Content-Disposition') is None:
-                continue
+            if part.get_content_disposition() == "attachment":
+                file_name = part.get_filename()
 
-            file_name = part.get_filename()
-
-            print(f"{count}.{file_name}")
-            
-            choice = input_integer("Do you want to save this file? (Type 1 for Yes, 0 for No): ")
-            
-            if choice == 1:
-                path = None
-                if self.__path_to_save_attachments is not None:
-                    print("Last-used path: ", self.__path_to_save_attachments)
-                    
-                    choice = input_integer("Do you want to use this path? (Type 1 for Yes, 0 for No): ")
-                    
-                    if choice == 1:
-                        path = self.__path_to_save_attachments
+                print(f"{count}.{file_name}")
+                
+                choice = input_integer("Do you want to save this file? (Type 1 for Yes, 0 for No): ")
+                
+                if choice == 1:
+                    path = None
+                    if self.__path_to_save_attachments is not None:
+                        print("Last-used path: ", self.__path_to_save_attachments)
+                        
+                        choice = input_integer("Do you want to use this path? (Type 1 for Yes, 0 for No): ")
+                        
+                        if choice == 1:
+                            path = self.__path_to_save_attachments
+                        else:
+                            path = str(input("Enter path to save the file: "))
                     else:
                         path = str(input("Enter path to save the file: "))
-                else:
-                    path = str(input("Enter path to save the file: "))
 
-                # Check if the path exists
-                if not os.path.exists(path):
-                    # If not, create it
-                    os.makedirs(path)
+                    # Check if the path exists
+                    if not os.path.exists(path):
+                        # If not, create it
+                        os.makedirs(path)
 
-                # Update the last-used path
-                self.__path_to_save_attachments = path
+                    # Update the last-used path
+                    self.__path_to_save_attachments = path
 
-                # Create a file path
-                file_name = f"{path}/{file_name}"
+                    # Create a file path
+                    file_name = f"{path}/{file_name}"
 
-                # Save the file to the path
-                fb = open(file_name, 'wb')
-                fb.write(part.get_payload(decode=True))
-                fb.close()
-                print("File saved.\n\n")
+                    # Save the file to the path
+                    fb = open(file_name, 'wb')
+                    fb.write(part.get_payload(decode=True))
+                    fb.close()
+                    print("File saved.")
 
     def __ask_to_save_attachments(self, message: mailbox.mboxMessage):
         attachments_count = self.__count_attachments(message)
@@ -387,12 +382,8 @@ class pop3_client:
                 print(f"{key}: {value}")
 
         for part in message.walk():
-            # Check if the part is multipart
-            if part.get_content_maintype() == 'multipart':
-                continue
-            
-            # If the part is text
-            if part.get_content_type() == 'text/plain':
+            # If the part is content
+            if part.get_content_type() == 'text/plain' and part.get_content_disposition() is None:
                 # https://stackoverflow.com/questions/38970760/how-to-decode-a-mime-part-of-a-message-and-get-a-unicode-string-in-python-2
                 bytes = part.get_payload(decode=True)
                 charset = part.get_content_charset('iso-8859-1')
@@ -424,9 +415,17 @@ class pop3_client:
 
         while True:
             # Ask the user to choose which message to display
-            choice = input_integer("Enter the number of the message you want to display.(Enter 0 to display all messages or Enter any other number to exit): ")
+            choice = input("Enter the number of the message you want to display. (Enter 0 to display all messages or press Enter to exit): ")
             # NOTES: Message number starts from 1 but the index of the message in the mailbox starts from 0.
             # Therefore, we need to subtract 1 from the choice to get the index of the message in the mailbox.
+            
+            if choice == "":
+                break
+            
+            while not choice.isdigit():
+                choice = input("Invalid character. Please re-enter: ")
+                
+            choice = int(choice)
 
             # If user choose to display message number count
             if choice != 0:
