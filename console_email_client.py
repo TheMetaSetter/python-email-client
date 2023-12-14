@@ -9,8 +9,7 @@ from utilities import *
 
 class console_email_client:
     def __init__(self, mail_server_address: str, smtp_port: int = 2225, pop3_port: int = 3335):
-        self.__smtp_server_address = mail_server_address
-        self.__pop3_server_address = mail_server_address
+        self.__mail_server_address = mail_server_address
 
         self.__smtp_port = smtp_port
         self.__pop3_port = pop3_port
@@ -18,7 +17,8 @@ class console_email_client:
         self.__pop3_client: pop3_client.pop3_client = None
         self.__smtp_client: smtp_client.smtp_client = None
 
-        self.__current_user: str = None
+        self.__current_username: str = None
+        self.__current_password: str = None
 
         self.__current_mode: int = None
 
@@ -26,6 +26,27 @@ class console_email_client:
         
         self.__user_config_file_path: str = None
 
+    def generate_config(self):
+        config = {
+            "General": {
+                "Username": self.__current_username,
+                "Password": self.__current_password,
+                "MailServer": self.__mail_server_address,
+                "SMTP": self.__smtp_port,
+                "POP3": self.__pop3_port,
+                "Autoload": 10
+            },
+            "Filter": [
+                {"From": [], "ToFolder": "Project"},
+                {"Subject": [], "ToFolder": "Important"},
+                {"Content": [], "ToFolder": "Work"},
+                {"Spam": [], "ToFolder": "Spam"}
+            ]
+        }
+
+        with open(f'Profiles/{self.__current_username}/config.json', 'w') as config_file:
+            json.dump(config, config_file, indent = 2)
+    
     def __console_login(self):
         try:
             username = input("Username: ")
@@ -38,11 +59,11 @@ class console_email_client:
 
             # Try to login to the smtp server
             self.__smtp_client = smtp_client.smtp_client(
-                self.__smtp_server_address, self.__smtp_port, username, password)
+                self.__mail_server_address, self.__smtp_port, username, password)
             
             # Try to login to the pop3 server
             self.__pop3_client = pop3_client.pop3_client(
-                self.__pop3_server_address, self.__pop3_port, username, password)
+                self.__mail_server_address, self.__pop3_port, username, password)
             
         except Exception as e:
             print(e)
@@ -50,10 +71,14 @@ class console_email_client:
             
         else:
             # After login successfully, set current user
-            self.__current_user = username
+            self.__current_username = username
             
             # Initialize path to config file
-            self.__user_config_file_path = f"Profiles/{self.__current_user}/config.json"
+            self.__user_config_file_path = f"Profiles/{self.__current_username}/config.json"
+            
+            # Create config file if not exist
+            if not os.path.exists(self.__user_config_file_path):
+                self.generate_config()
             
             # Set config file path for pop3 client
             self.__pop3_client.set_path_to_config_file(self.__user_config_file_path)
@@ -64,7 +89,8 @@ class console_email_client:
     def __console_logout(self):
         flag = input("Do you want to quit?(Type 1 for Yes, order keys for No): ")
         if flag == "1":
-            self.__current_user = str()
+            self.__current_username = str()
+            self.__current_password = str()
 
             if self.__smtp_client is not None:
                 self.__smtp_client.__exit__
@@ -194,13 +220,13 @@ class console_email_client:
             print(f"{i}. {mailbox}")
             self.__mailboxes_dict[i] = mailbox
 
-        choice = int(input("You want to check email in folder number: "))
+        choice = input_integer("You want to check mailbox number: ")
 
         try:
             self.__pop3_client.check_mailbox(self.__mailboxes_dict[choice])
         except KeyError:
             print("Invalid folder number.\n")
-            return
+            
 
     def __display_menu(self):
         print("Select from the options below:")
