@@ -5,12 +5,12 @@
     "MailServer": "192.168.1.10",
     "SMTP": 2225,
     "POP3": 3335,
-    "Autoload": 1
+    "Autoload": 10
   },
   "Filter": [
     {
       "From": [
-        "tin75vn@gmail.com"
+        "nguyenanhkhoi0608@gmail.com"
       ],
       "ToFolder": "Project"
     },

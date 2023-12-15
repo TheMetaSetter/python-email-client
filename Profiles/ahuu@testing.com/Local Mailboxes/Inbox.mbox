@@ -1,0 +1,15 @@
+From MAILER-DAEMON Fri Dec 15 09:46:24 2023
+Subject: this is a test email
+From: ahuu@testing.com
+To: ahuu@testing.com
+Content-Type: multipart/mixed; boundary=JueyJexJ9iaxNgpp
+
+--JueyJexJ9iaxNgpp
+Content-Type: text/plain
+
+test
+
+
+
+--JueyJexJ9iaxNgpp--
+

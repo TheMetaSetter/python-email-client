@@ -19,17 +19,17 @@ class email_filter:
         return [filter_rule(rule) for rule in config.get('Filter', [])]
 
     def classify_email(self, email: mailbox.mboxMessage):
-        sender = email['From']
-        subject = email['Subject']
+        sender = email['From'].lower()
+        subject = email['Subject'].lower()
         payload = email.get_payload()
 
         if isinstance(payload, list):
             # If there are multiple parts, assume the first part is the text/plain part
             text_part = payload[0]
-            content = text_part.get_payload()
+            content = text_part.get_payload().lower()
         else:
             # If there is only one part, treat it as the text/plain part
-            content = payload
+            content = payload.lower()
 
         for filter_rule in self.config:
             if filter_rule.from_addresses and any(addr in sender for addr in filter_rule.from_addresses):
