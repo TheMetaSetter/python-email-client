@@ -188,10 +188,10 @@ class console_email_client:
             return
         
         else:
-            path_list = []
             if have_file == "1" :
                 file_amount = int(input("Number of files you want to send: "))
                 while True:
+                    path_list = []
                     for i in range(1, file_amount + 1):
                         while True:
                             path = input(f"Indicates the file path {i}: ")
