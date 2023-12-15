@@ -191,23 +191,25 @@ class console_email_client:
             path_list = []
             if have_file == "1" :
                 file_amount = int(input("Number of files you want to send: "))
-                for i in range(1, file_amount + 1):
-                    while True:
-                        path = input(f"Indicates the file path {i}: ")
-                        if path == "***":
-                            print("Canceled sending email!!!\n")
-                            return
-                        if os.path.exists(path):
-                            path_list.append(path)
-                            break
-                        else:
-                            print(f"The file {path} does not exist. Please re-enter or enter '***' to cancel sending the email!!!")
-                      
+                while True:
+                    for i in range(1, file_amount + 1):
+                        while True:
+                            path = input(f"Indicates the file path {i}: ")
+                            if path == "***":
+                                print("Canceled sending email!!!\n")
+                                return
+                            
+                            if os.path.exists(path):
+                                path_list.append(path)
+                                break
+                            else:
+                                print(f"The file {path} does not exist. Please re-enter or enter '***' to cancel sending the email!!!")
+                        
+                    if self.__smtp_client.check_list_file_size(path_list, 3) == False:
+                        print("The size of the attached files is larger than 3MB so it cannot be sent. Please re-enter or enter '***' to cancel sending the email!!!") 
+                    else:
+                        break            
                     
-                if self.__smtp_client.check_list_file_size(path_list, 3) == False:
-                    print("The size of the attached files is larger than 3MB so it cannot be sent. Sending email failed!!!\n")
-                    return 
-                                
             self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
                 
 
