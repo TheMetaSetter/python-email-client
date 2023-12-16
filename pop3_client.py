@@ -44,6 +44,8 @@ class pop3_client:
             self.__slash = "\\"
         elif sys.platform == "darwin":
             self.__slash = "/"
+        elif sys.platform == "linux" or sys.platform == "linux2":
+            self.__slash = "/"
         
         self.__path_to_local_mailboxes: str = f"Profiles{self.__slash}{self.__username}{self.__slash}Local Mailboxes"
         
