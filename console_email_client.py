@@ -176,7 +176,6 @@ class console_email_client:
                 break
                 
         have_file =""
-        path_list = []
         while True:
             have_file = input("Are files attached? (1. yes, 2. no): ")
             if have_file =="1"or have_file=="2"or have_file=="***":
@@ -189,9 +188,11 @@ class console_email_client:
             return
         
         else:
+            path_list = []
             if have_file == "1" :
                 file_amount = int(input("Number of files you want to send: "))
                 while True:
+                    path_list = []
                     for i in range(1, file_amount + 1):
                         while True:
                             path = input(f"Indicates the file path {i}: ")
