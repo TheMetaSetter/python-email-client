@@ -40,6 +40,7 @@ class pop3_client:
         self.__slash: str = None
 
         # Check if the os is Windows or MacOS
+        # https://stackoverflow.com/questions/8220108/how-do-i-check-the-operating-system-in-python
         if sys.platform == "win32":
             self.__slash = "\\"
         elif sys.platform == "darwin":
