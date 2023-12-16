@@ -287,17 +287,51 @@ class pop3_client:
 
     def __count_attachments(self, message: mailbox.mboxMessage) -> int:
         count = 0
-        if message.get_content_maintype() == 'multipart/mixed':
-            for part in message.walk():
-                if part.get_content_maintype() == 'multipart/mixed':
-                    continue
-                if part.get('Content-Disposition') is None:
-                    continue
+        for part in message.walk():
+            if part.get_content_disposition() == "attachment":
                 count += 1
 
         return count
+    
+    def __save_all_attachments(self, message: mailbox.mboxMessage):
+        # Ask user for the path to save all these attachments at once
+        path = None
+        if self.__path_to_save_attachments is not None:
+            print("Last-used path: ", self.__path_to_save_attachments)
+            
+            choice = input_integer("Do you want to use this path? (Type 1 for Yes, 0 for No): ")
+            
+            if choice == 1:
+                path = self.__path_to_save_attachments
+            else:
+                path = str(input("Enter path to save all the files: "))
+        else:
+            path = str(input("Enter path to save all the files: "))
+        
+        # Check if the path exists
+        if not os.path.exists(path):
+            # If not, create it
+            os.makedirs(path)
+        
+        # Update the last-used path
+        self.__path_to_save_attachments = path
+        
+        count = 1
+        for part in message.walk():
+            if part.get_content_disposition() == "attachment":
+                file_name = part.get_filename()
 
-    def __save_attachments(self, message: mailbox.mboxMessage):
+                # Create a file path
+                file_name = f"{path}/{file_name}"
+
+                # Save the file to the path
+                fb = open(file_name, 'wb')
+                fb.write(part.get_payload(decode=True))
+                fb.close()
+                print(f"File {count} saved.")
+                count += 1
+
+    def __save_each_attachment(self, message: mailbox.mboxMessage):
         count = 1
         for part in message.walk():
             if part.get_content_disposition() == "attachment":
@@ -346,7 +380,13 @@ class pop3_client:
             choice = input_integer("Do you want to save the attachments? (Type 1 for Yes, 0 for No): ")
 
         if choice == 1:
-            self.__save_attachments(message)
+            # Ask user whether to save all attachments at once or save each attachment
+            choice = input_integer("Do you want to save all attachments at once? (Type 1 for Yes, 0 for No): ")
+            
+            if choice == 1:
+                self.__save_all_attachments(message)
+            else:
+                self.__save_each_attachment(message)
 
     def __dipslay_message_summary(self, message: mailbox.mboxMessage):
         # Components of an message summary
@@ -404,7 +444,7 @@ class pop3_client:
                 continue
 
             # If the part is an attachment
-            if part.get('Content-Disposition') == "attachment":
+            if part.get_content_disposition() == "attachment":
                 file_name = part.get_filename()
                 print(f"Attachment: {count}. {file_name}")
                 count += 1

@@ -18,7 +18,7 @@ class client_socket:
             OSError: "[WinError 10056] A connect request was made on an already connected socket"
         }
 
-        self.__BYTES_PER_RECIEVE = 1024 * 1024 *1024
+        self.__BYTES_PER_RECIEVE = 1000000
 
     # These are public methods.
     def recieve_bytes(self) -> bytes:
@@ -27,11 +27,8 @@ class client_socket:
         Returns:
             bytes: The message recieved from the server.
         """
-        try: 
-            return self.__socket.recv(self.__BYTES_PER_RECIEVE)
-        except ConnectionAbortedError:
-            print(self.__error_dict[ConnectionAbortedError])
-            sys.exit(1)
+    
+        return self.__socket.recv(self.__BYTES_PER_RECIEVE)
 
     def send(self, message: str):
         """Send a message in bytes to the server.

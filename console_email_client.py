@@ -227,7 +227,7 @@ class console_email_client:
         try:
             self.__pop3_client.check_mailbox(self.__mailboxes_dict[choice])
         except KeyError:
-            print("Invalid folder number.\n")
+            print("Invalid mailbox number.\n")
             
 
     def __display_menu(self):
