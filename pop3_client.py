@@ -78,8 +78,9 @@ class pop3_client:
 
         self.__socket.send("QUIT")
         
-        server_response = self.__socket.recieve_string()
-        if server_response[:3] != "+OK":
+        server_response = self.__socket.recieve_bytes()
+        
+        if b"+OK" not in server_response:
             print("Quit session unsuccessful.")
             self.close()
 
@@ -101,16 +102,16 @@ class pop3_client:
         """
 
         self.__socket.send("USER " + self.__username)
-        server_response = self.__socket.recieve_string()
+        server_response = self.__socket.recieve_bytes()
 
-        if server_response[:3] != "+OK":
+        if b"+OK" not in server_response:
             self.__socket.close()
             raise Exception("The username is invalid.")
 
         self.__socket.send("PASS " + self.__password)
-        server_response = self.__socket.recieve_string()
+        server_response = self.__socket.recieve_bytes()
 
-        if server_response[:3] != "+OK":
+        if b"+OK" not in server_response:
             self.__socket.close()
             raise Exception("The password is invalid.")
 
@@ -123,9 +124,9 @@ class pop3_client:
 
         self.__socket.send("STAT")
 
-        server_response = self.__socket.recieve_string()
+        server_response = self.__socket.recieve_bytes()
 
-        if server_response[:3] != "+OK":
+        if b"+OK" not in server_response:
             print(server_response)
             self.__socket.close()
             sys.exit(1)
@@ -148,12 +149,18 @@ class pop3_client:
 
         # Keep recieving the message until the end of the message
         message_bytes = self.__socket.recieve_bytes()
-        while message_bytes[-5:] != b"\r\n.\r\n":
+
+        # If the message_bytes ends with b"\r\n.\r\n", then the message is complete.
+        while True:
+            # Recieve the message
             message_bytes += self.__socket.recieve_bytes()
 
-        # Keep the message content from the "Subject" to the end of the mail
-        message_bytes = message_bytes[message_bytes.find(
-            b"Subject"):message_bytes.find(b"\r\n.\r\n")]
+            # If the message ends with b"\r\n.\r\n"
+            if message_bytes.endswith(b"\r\n.\r\n"):
+                break
+            
+        # Keep the content right after the first "\r\n" till the end
+        message_bytes = message_bytes.split(b"\r\n", 1)[1]
 
         return message_bytes
 
@@ -168,9 +175,9 @@ class pop3_client:
         """
 
         # Parse the message bytes to an message object
-        mbox_object = mailbox.mboxMessage(message_bytes)
-
-        return mbox_object
+        message_object = mailbox.mboxMessage(message_bytes)
+        
+        return message_object
 
     def __delete_message_on_server(self, id: int):
         """Delete a message on the server.
@@ -181,9 +188,9 @@ class pop3_client:
 
         self.__socket.send(f"DELE {id}")
 
-        server_response = self.__socket.recieve_string()
+        server_response = self.__socket.recieve_bytes()
 
-        if server_response[:3] != "+OK":
+        if b"+OK" not in server_response:
             print("Delete unsuccessful.")
 
     def __add_message_object_to_local_mailboxes(self, message: mailbox.mboxMessage, local_mailbox_name: str):
@@ -280,9 +287,9 @@ class pop3_client:
 
     def __count_attachments(self, message: mailbox.mboxMessage) -> int:
         count = 0
-        if message.get_content_maintype() == 'multipart':
+        if message.get_content_maintype() == 'multipart/mixed':
             for part in message.walk():
-                if part.get_content_maintype() == 'multipart':
+                if part.get_content_maintype() == 'multipart/mixed':
                     continue
                 if part.get('Content-Disposition') is None:
                     continue
@@ -382,6 +389,9 @@ class pop3_client:
                 print(f"{key}: {value}")
 
         for part in message.walk():
+            if part.get_content_maintype() == 'multipart':
+                continue
+            
             # If the part is content
             if part.get_content_type() == 'text/plain' and part.get_content_disposition() is None:
                 # https://stackoverflow.com/questions/38970760/how-to-decode-a-mime-part-of-a-message-and-get-a-unicode-string-in-python-2
@@ -394,7 +404,7 @@ class pop3_client:
                 continue
 
             # If the part is an attachment
-            if part.get('Content-Disposition') is not None:
+            if part.get('Content-Disposition') == "attachment":
                 file_name = part.get_filename()
                 print(f"Attachment: {count}. {file_name}")
                 count += 1

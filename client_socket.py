@@ -21,27 +21,17 @@ class client_socket:
         self.__BYTES_PER_RECIEVE = 1024 * 1024 *1024
 
     # These are public methods.
-
-    def recieve_string(self) -> str:
-        """Recieve a message in string format from the server.
-
-        Returns:
-            str: The message recieved from the server.
-        """
-        try:
-            return self.__socket.recv(self.__BYTES_PER_RECIEVE).decode('utf-8')
-        except ConnectionAbortedError:
-            print(self.__error_dict[ConnectionAbortedError])
-            sys.exit(1)
-
     def recieve_bytes(self) -> bytes:
         """Recieve a message in bytes from the server.
 
         Returns:
             bytes: The message recieved from the server.
         """
-
-        return self.__socket.recv(self.__BYTES_PER_RECIEVE)
+        try: 
+            return self.__socket.recv(self.__BYTES_PER_RECIEVE)
+        except ConnectionAbortedError:
+            print(self.__error_dict[ConnectionAbortedError])
+            sys.exit(1)
 
     def send(self, message: str):
         """Send a message in bytes to the server.
@@ -76,10 +66,10 @@ class client_socket:
             self.__socket.connect((self.__address, self.__port))
 
             # Receive the server's response
-            server_response = self.recieve_string()
+            server_response = self.recieve_bytes()
 
             # Check if the server is ready
-            if server_response[:3] != "+OK":
+            if b"+OK" not in server_response:
                 self.__socket.close()
                 raise Exception(server_response)
             
