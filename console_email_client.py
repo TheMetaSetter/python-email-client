@@ -87,8 +87,9 @@ class console_email_client:
             self.__pop3_client.move_all_messages_to_local_mailboxes_and_close()
 
     def __console_logout(self):
-        flag = input("Do you want to quit?(Type 1 for Yes, order keys for No): ")
-        if flag == "1":
+        flag = input_integer("Do you want to quit? (Type 1 for Yes, order keys for No): ")
+        
+        if flag == 1:
             self.__current_username = str()
             self.__current_password = str()
 
