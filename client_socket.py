@@ -15,10 +15,12 @@ class client_socket:
             socket.gaierror: "client_socket.py: The hostname or the service you’re trying to connect to cannot be resolved.",
             BrokenPipeError: "client_socket.py: The server is not ready.",
             ConnectionAbortedError: "client_socket.py: An established connection was aborted by the software in your host machine",
-            OSError: "[WinError 10056] A connect request was made on an already connected socket"
+            OSError: "[WinError 10056] A connect request was made on an already connected socket",
+            ConnectionResetError: "client_socket.py: An existing connection was forcibly closed by the remote host.",
+            TimeoutError: "client_socket.py: The connection attempt timed out."
         }
 
-        self.__BYTES_PER_RECIEVE = 1000000
+        self.__BYTES_PER_RECIEVE = 1000 * 1000 * 1000
 
     # These are public methods.
     def recieve_bytes(self) -> bytes:
@@ -27,8 +29,16 @@ class client_socket:
         Returns:
             bytes: The message recieved from the server.
         """
-    
-        return self.__socket.recv(self.__BYTES_PER_RECIEVE)
+        
+        try:
+            recieved_bytes = self.__socket.recv(self.__BYTES_PER_RECIEVE)
+        except ConnectionResetError:
+            print(self.__error_dict[ConnectionResetError])
+            exit(1)
+        except TimeoutError:
+            return b''
+        
+        return recieved_bytes
 
     def send(self, message: str):
         """Send a message in bytes to the server.
@@ -60,6 +70,7 @@ class client_socket:
                 self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             # Connect to the server
+            self.__socket.settimeout(2)
             self.__socket.connect((self.__address, self.__port))
 
             # Receive the server's response

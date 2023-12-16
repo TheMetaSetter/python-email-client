@@ -148,7 +148,7 @@ class pop3_client:
         self.__socket.send(f"RETR {id}")
 
         # Keep recieving the message until the end of the message
-        message_bytes = self.__socket.recieve_bytes()
+        message_bytes = b''
 
         # If the message_bytes ends with b"\r\n.\r\n", then the message is complete.
         while True:
@@ -293,6 +293,40 @@ class pop3_client:
 
         return count
     
+    def __save_an_attachment(self, part: mailbox.mboxMessage, path: str):
+        # Get the name of the file
+        file_name = part.get_filename()
+        
+        # Split the name and the extension
+        file_name, file_extension = os.path.splitext(file_name)
+
+        # Create the full path to file
+        full_path_to_file = f"{path}/{file_name}.{file_extension}"
+        
+        # Check if the file exists
+        if os.path.exists(full_path_to_file):
+            # Count the number of the file have the same name
+            count_same_name = 1
+            while True:
+                # Create a new full path to file
+                full_path_to_file = f"{path}/{file_name}({count_same_name}).{file_extension}"
+                
+                # Check if the file exists
+                if os.path.exists(full_path_to_file):
+                    count_same_name += 1
+                    continue
+                else:
+                    # Save the file to the path
+                    fb = open(full_path_to_file, 'wb')
+                    fb.write(part.get_payload(decode=True))
+                    fb.close()
+                    break
+        else:
+            # Save the file to the path
+            fb = open(full_path_to_file, 'wb')
+            fb.write(part.get_payload(decode=True))
+            fb.close()
+    
     def __save_all_attachments(self, message: mailbox.mboxMessage):
         # Ask user for the path to save all these attachments at once
         path = None
@@ -316,22 +350,15 @@ class pop3_client:
         # Update the last-used path
         self.__path_to_save_attachments = path
         
+        # Save attachments
         count = 1
         for part in message.walk():
             if part.get_content_disposition() == "attachment":
-                file_name = part.get_filename()
-
-                # Create a file path
-                file_name = f"{path}/{file_name}"
-
-                # Save the file to the path
-                fb = open(file_name, 'wb')
-                fb.write(part.get_payload(decode=True))
-                fb.close()
+                self.__save_an_attachment(part, self.__path_to_save_attachments)
                 print(f"File {count} saved.")
                 count += 1
 
-    def __save_each_attachment(self, message: mailbox.mboxMessage):
+    def __save_attachments_consecutively(self, message: mailbox.mboxMessage):
         count = 1
         for part in message.walk():
             if part.get_content_disposition() == "attachment":
@@ -355,21 +382,8 @@ class pop3_client:
                     else:
                         path = str(input("Enter path to save the file: "))
 
-                    # Check if the path exists
-                    if not os.path.exists(path):
-                        # If not, create it
-                        os.makedirs(path)
-
-                    # Update the last-used path
-                    self.__path_to_save_attachments = path
-
-                    # Create a file path
-                    file_name = f"{path}/{file_name}"
-
-                    # Save the file to the path
-                    fb = open(file_name, 'wb')
-                    fb.write(part.get_payload(decode=True))
-                    fb.close()
+                    self.__save_an_attachment(part, path)
+                    
                     print("File saved.")
 
     def __ask_to_save_attachments(self, message: mailbox.mboxMessage):
@@ -386,7 +400,7 @@ class pop3_client:
             if choice == 1:
                 self.__save_all_attachments(message)
             else:
-                self.__save_each_attachment(message)
+                self.__save_attachments_consecutively(message)
 
     def __dipslay_message_summary(self, message: mailbox.mboxMessage):
         # Components of an message summary
