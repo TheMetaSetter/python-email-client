@@ -36,15 +36,24 @@ class pop3_client:
         self.__filter: email_filter = None
         
         self.__path_to_config_file: str = config_file_path
+        
+        self.__slash: str = None
 
-        self.__path_to_local_mailboxes: str = f"Profiles/{self.__username}/Local Mailboxes"
+        # Check if the os is Windows or MacOS
+        if sys.platform == "win32":
+            self.__slash = "\\"
+        elif sys.platform == "darwin":
+            self.__slash = "/"
+        
+        self.__path_to_local_mailboxes: str = f"Profiles{self.__slash}{self.__username}{self.__slash}Local Mailboxes"
+        
         # Check if the local mailboxes folder exists
         if not os.path.exists(self.__path_to_local_mailboxes):
             # If not, create it
             os.makedirs(self.__path_to_local_mailboxes)
 
         # We don't create the Downloads folder here because it may not be used.
-        self.__path_to_save_attachments: str = f"Profiles/{self.__username}/Downloads"
+        self.__path_to_save_attachments: str = f"Profiles{self.__slash}{self.__username}{self.__slash}Downloads"
 
         # After the client object is created, it will automatically connect to the server and login.
         self.__connect()
@@ -203,7 +212,7 @@ class pop3_client:
         path = self.__path_to_local_mailboxes
 
         # Create a file path
-        file_path = f"{path}/{local_mailbox_name}.mbox"
+        file_path = f"{path}{self.__slash}{local_mailbox_name}.mbox"
         
         # Create a mailbox object
         mbox = mailbox.mbox(file_path, create=True)
@@ -301,7 +310,7 @@ class pop3_client:
         file_name, file_extension = os.path.splitext(file_name)
 
         # Create the full path to file
-        full_path_to_file = f"{path}/{file_name}.{file_extension}"
+        full_path_to_file = f"{path}{self.__slash}{file_name}.{file_extension}"
         
         # Check if the file exists
         if os.path.exists(full_path_to_file):
@@ -309,7 +318,7 @@ class pop3_client:
             count_same_name = 1
             while True:
                 # Create a new full path to file
-                full_path_to_file = f"{path}/{file_name}({count_same_name}).{file_extension}"
+                full_path_to_file = f"{path}{self.__slash}{file_name}({count_same_name}).{file_extension}"
                 
                 # Check if the file exists
                 if os.path.exists(full_path_to_file):
