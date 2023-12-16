@@ -176,6 +176,7 @@ class console_email_client:
                 break
                 
         have_file =""
+        path_list = []
         while True:
             have_file = input("Are files attached? (1. yes, 2. no): ")
             if have_file =="1"or have_file=="2"or have_file=="***":
@@ -191,7 +192,6 @@ class console_email_client:
             if have_file == "1" :
                 file_amount = int(input("Number of files you want to send: "))
                 while True:
-                    path_list = []
                     for i in range(1, file_amount + 1):
                         while True:
                             path = input(f"Indicates the file path {i}: ")
@@ -208,7 +208,7 @@ class console_email_client:
                     if self.__smtp_client.check_list_file_size(path_list, 3) == False:
                         print("The size of the attached files is larger than 3MB so it cannot be sent. Please re-enter or enter '***' to cancel sending the email!!!") 
                     else:
-                        break            
+                        break  
                     
             self.__smtp_client.send_email(to_receivers, cc_receivers, bcc_receivers, subject, content,path_list)
                 
